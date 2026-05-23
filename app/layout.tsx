@@ -1,4 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google"
+import type { Metadata } from "next"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -11,6 +12,15 @@ const fontMono = Geist_Mono({
   variable: "--font-mono",
 })
 
+export const metadata: Metadata = {
+  title: {
+    default: "The Coffee Index | Specialty Coffee in Chile",
+    template: "%s | The Coffee Index",
+  },
+  description:
+    "The index of specialty coffee culture in Chile.",
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -18,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="es"
       suppressHydrationWarning
       className={cn("antialiased", fontMono.variable, "font-sans", geist.variable)}
     >
