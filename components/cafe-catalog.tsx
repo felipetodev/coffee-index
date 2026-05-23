@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 
 import { CafeGallery } from "@/components/cafe-gallery"
+import { CafeMap } from "@/components/cafe-map"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
@@ -45,22 +46,21 @@ const SAVED_CAFES_STORAGE_KEY = "cafeteria.saved-cafes"
 export function CafeCatalog({ cafes }: CafeCatalogProps) {
   const [query, setQuery] = useState("")
   const [commune, setCommune] = useState("Todas")
-  const [savedCafeSlugs, setSavedCafeSlugs] = useState<string[]>(() => {
-    if (typeof window === "undefined") {
-      return []
-    }
+  const [hasLoadedSavedCafes, setHasLoadedSavedCafes] = useState(false)
+  const [savedCafeSlugs, setSavedCafeSlugs] = useState<string[]>([])
 
+  useEffect(() => {
     try {
       const storedValue = window.localStorage.getItem(SAVED_CAFES_STORAGE_KEY)
 
       if (!storedValue) {
-        return []
+        return
       }
 
       const parsedValue = JSON.parse(storedValue)
 
       if (!Array.isArray(parsedValue)) {
-        return []
+        return
       }
 
       const knownSlugs = new Set(cafes.map((cafe) => cafe.slug))
@@ -69,19 +69,24 @@ export function CafeCatalog({ cafes }: CafeCatalogProps) {
           typeof slug === "string" && knownSlugs.has(slug)
       )
 
-      return [...new Set(storedSlugs)]
+      setSavedCafeSlugs([...new Set(storedSlugs)])
     } catch {
       window.localStorage.removeItem(SAVED_CAFES_STORAGE_KEY)
-      return []
+    } finally {
+      setHasLoadedSavedCafes(true)
     }
-  })
+  }, [cafes])
 
   useEffect(() => {
+    if (!hasLoadedSavedCafes) {
+      return
+    }
+
     window.localStorage.setItem(
       SAVED_CAFES_STORAGE_KEY,
       JSON.stringify(savedCafeSlugs)
     )
-  }, [savedCafeSlugs])
+  }, [hasLoadedSavedCafes, savedCafeSlugs])
 
   const filteredCafes = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase()
@@ -171,17 +176,19 @@ export function CafeCatalog({ cafes }: CafeCatalogProps) {
       </header>
 
       <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
-        {savedCafes.length > 0 && (
-          <SavedCafesCarousel
-            cafes={savedCafes}
-            onToggleSaved={toggleSavedCafe}
-          />
-        )}
+        <div className="min-h-0" suppressHydrationWarning>
+          {hasLoadedSavedCafes && savedCafes.length > 0 && (
+            <SavedCafesCarousel
+              cafes={savedCafes}
+              onToggleSaved={toggleSavedCafe}
+            />
+          )}
+        </div>
 
         <section className="grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
           <div>
             <h2 className="text-xl font-medium tracking-tight">
-              ☕ {filteredCafes.length} resultados
+              {filteredCafes.length} resultados
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Información inicial basada en la guía publicada por La Tercera,
@@ -220,7 +227,7 @@ function SavedCafesCarousel({
     <section className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-medium tracking-tight">❤️ Favoritos</h2>
+          <h2 className="text-xl font-medium tracking-tight">Favoritos</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Tus cafeterías favoritas quedan aquí para revisarlas rápido.
           </p>
@@ -318,7 +325,11 @@ function CafeCard({
       </CardContent>
       <CardFooter className="justify-between gap-2">
         <CafeQuickView cafe={cafe} />
-        <Button render={<Link href={`/cafeterias/${cafe.slug}`} />} size="sm">
+        <Button
+          nativeButton={false}
+          render={<Link href={`/cafeterias/${cafe.slug}`} />}
+          size="sm"
+        >
           Ver ficha
           <ArrowUpRightIcon data-icon="inline-end" />
         </Button>
@@ -370,12 +381,15 @@ function CafeQuickView({ cafe }: { cafe: Cafe }) {
             <Separator />
             <div>
               <p className="text-sm font-medium">Geolocalización</p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {cafe.locationPlaceholder}
-              </p>
+              <CafeMap
+                addresses={cafe.addresses}
+                className="mt-3 h-44"
+                name={cafe.name}
+              />
             </div>
             <ButtonGroup className="mt-auto">
               <Button
+                nativeButton={false}
                 render={<a href={instagramUrl(cafe.instagram)} target="_blank" rel="noreferrer" />}
                 variant="outline"
                 size="sm"
@@ -383,7 +397,11 @@ function CafeQuickView({ cafe }: { cafe: Cafe }) {
                 Instagram
                 <ExternalLinkIcon data-icon="inline-end" />
               </Button>
-              <Button render={<Link href={`/cafeterias/${cafe.slug}`} />} size="sm">
+              <Button
+                nativeButton={false}
+                render={<Link href={`/cafeterias/${cafe.slug}`} />}
+                size="sm"
+              >
                 Ficha
               </Button>
             </ButtonGroup>

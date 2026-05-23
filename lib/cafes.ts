@@ -13,7 +13,6 @@ export type Cafe = {
   description: string
   tags: string[]
   imagePlaceholders: CafeImage[]
-  locationPlaceholder: string
 }
 
 const assetImages = (
@@ -41,7 +40,6 @@ export const cafes: Cafe[] = [
       ["artemisa1.webp", "artemisa2.webp"],
       ["Barra experimental", "Cold brew"]
     ),
-    locationPlaceholder: "Mapa pendiente para Tajamar 287.",
   },
   {
     slug: "cafe-marelli",
@@ -57,7 +55,6 @@ export const cafes: Cafe[] = [
       ["marelli1.jpg", "marelli2.jpg", "marelli3.jpg"],
       ["Fachada", "Barra", "Plaza Guarello"]
     ),
-    locationPlaceholder: "Mapa pendiente para Bulnes 997.",
   },
   {
     slug: "puelo-coffee-roasters",
@@ -73,7 +70,6 @@ export const cafes: Cafe[] = [
       ["pueblo1.jpg", "pueblo2.jpg", "pueblo3.jpg"],
       ["Arquitectura", "Tueste", "Cocina"]
     ),
-    locationPlaceholder: "Mapa pendiente para Av. Vitacura 3535.",
   },
   {
     slug: "felix-cafe",
@@ -89,7 +85,6 @@ export const cafes: Cafe[] = [
       ["felix1.jpg", "felix2.jpg", "felix3.jpg"],
       ["Vereda", "Pop-up", "Barra"]
     ),
-    locationPlaceholder: "Mapa pendiente para Coyancura 2223.",
   },
   {
     slug: "coffee-culture-coffee-roasters",
@@ -105,7 +100,6 @@ export const cafes: Cafe[] = [
       ["cculture1.jpg", "cculture2.jpg", "cculture3.jpg"],
       ["Tostaduría", "Granos", "Comunidad"]
     ),
-    locationPlaceholder: "Mapa pendiente para General Ordóñez 199.",
   },
   {
     slug: "mirlo",
@@ -121,7 +115,6 @@ export const cafes: Cafe[] = [
       ["mirlo1.jpg", "mirlo2.jpg", "mirlo3.jpg"],
       ["Casona", "Bollería", "Patio"]
     ),
-    locationPlaceholder: "Mapa pendiente para Eliodoro Yáñez 961.",
   },
   {
     slug: "black-mamba",
@@ -137,7 +130,6 @@ export const cafes: Cafe[] = [
       ["blackmamba1.jpg", "blackmamba2.jpg", "blackmamba3.jpg"],
       ["Interior", "Barra", "Detalle"]
     ),
-    locationPlaceholder: "Mapa pendiente para Eliodoro Yáñez 1228.",
   },
   {
     slug: "jose-y-jose",
@@ -153,7 +145,6 @@ export const cafes: Cafe[] = [
       ["josejose1.jpg", "josejose2.jpg", "josejose3.jpg"],
       ["Patio interior", "Tostadas", "Galería"]
     ),
-    locationPlaceholder: "Mapa pendiente para Merced 349.",
   },
   {
     slug: "patonejo",
@@ -169,7 +160,6 @@ export const cafes: Cafe[] = [
       ["patonejo1.jpg", "patonejo2.jpg", "patonejo3.jpg"],
       ["Casa esquina", "Bollería", "Café al paso"]
     ),
-    locationPlaceholder: "Mapa pendiente para sus sedes de Ñuñoa.",
   },
   {
     slug: "cafe-triciclo",
@@ -185,7 +175,6 @@ export const cafes: Cafe[] = [
       ["triciclo1.jpg", "triciclo2.jpg", "triciclo3.jpg"],
       ["Refugio patrimonial", "Frascos", "Pizza pop-up"]
     ),
-    locationPlaceholder: "Mapa pendiente para Santo Domingo 598.",
   },
   {
     slug: "dosis-coffee-lab",
@@ -201,7 +190,6 @@ export const cafes: Cafe[] = [
       ["dosis1.jpeg", "dosis2.jpg", "dosis3.jpg"],
       ["Texturas", "Barra fría", "Vitrina"]
     ),
-    locationPlaceholder: "Mapa pendiente para sus dos sedes de Providencia.",
   },
   {
     slug: "justicia-cafe",
@@ -220,7 +208,6 @@ export const cafes: Cafe[] = [
       ["justicia1.jpg", "justicia2.jpg", "justicia3.jpg"],
       ["Biblioteca", "Casa Central", "Barra"]
     ),
-    locationPlaceholder: "Mapa pendiente para sus sedes patrimoniales.",
   },
   {
     slug: "la-huerfana",
@@ -236,7 +223,6 @@ export const cafes: Cafe[] = [
       ["huerfana1.webp", "huerfana2.webp", "huerfana3.webp"],
       ["Palacio Pereira", "Pastelería", "Barra"]
     ),
-    locationPlaceholder: "Mapa pendiente para Huérfanos 1515.",
   },
   {
     slug: "lover-cafeteria",
@@ -252,7 +238,6 @@ export const cafes: Cafe[] = [
       ["lover1.jpg", "lover2.jpg", "lover3.jpg"],
       ["Vitrina", "Croissants", "Tartas"]
     ),
-    locationPlaceholder: "Mapa pendiente para Apoquindo 4615.",
   },
   {
     slug: "casa-cien-cafe",
@@ -268,7 +253,6 @@ export const cafes: Cafe[] = [
       ["ccien1.jpg", "ccien2.jpg", "ccien3.jpg"],
       ["Casa 1906", "Museo", "Barra"]
     ),
-    locationPlaceholder: "Mapa pendiente para San Ignacio de Loyola 89.",
   },
   {
     slug: "pausa-cafeteria",
@@ -284,7 +268,6 @@ export const cafes: Cafe[] = [
       ["pausa1.jpg", "pausa2.jpg", "pausa3.jpg"],
       ["Casona", "Brunch", "Pastelería"]
     ),
-    locationPlaceholder: "Mapa pendiente para Santa Isabel 0122.",
   },
   {
     slug: "somoszen",
@@ -300,7 +283,6 @@ export const cafes: Cafe[] = [
       ["zen1.jpg", "zen2.webp"],
       ["Edificio histórico", "Bebidas"]
     ),
-    locationPlaceholder: "Mapa pendiente para Bandera 620.",
   },
   {
     slug: "barra-b",
@@ -316,7 +298,6 @@ export const cafes: Cafe[] = [
       ["barrab1.jpg", "barrab2.jpg", "barrab3.jpg"],
       ["Barra abierta", "Masa madre", "Coffee tonic"]
     ),
-    locationPlaceholder: "Mapa pendiente para Av. Pajaritos 4810.",
   },
   {
     slug: "cafe-magnolio",
@@ -332,7 +313,6 @@ export const cafes: Cafe[] = [
       ["magnolio1.jpg", "magnolio2.jpg", "magnolio3.jpg"],
       ["Casa", "Patio", "Pastelería"]
     ),
-    locationPlaceholder: "Mapa pendiente para Luis Thayer Ojeda 1872.",
   },
   {
     slug: "la-foresta-coffee-cakes",
@@ -348,7 +328,6 @@ export const cafes: Cafe[] = [
       ["foresta1.jpg", "foresta2.jpg", "foresta3.jpg"],
       ["Vegetación", "Repostería", "Pileta"]
     ),
-    locationPlaceholder: "Mapa pendiente para Dr. Carlos Charlín 1480.",
   },
 ]
 

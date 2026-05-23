@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 import { ArrowLeftIcon, ExternalLinkIcon, MapPinIcon } from "lucide-react"
 
 import { CafeGallery } from "@/components/cafe-gallery"
+import { CafeMap } from "@/components/cafe-map"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -53,6 +54,7 @@ export default async function CafePage({ params }: CafePageProps) {
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-6 sm:px-6 lg:px-8">
         <Button
           className="w-fit"
+          nativeButton={false}
           render={<Link href="/" />}
           variant="ghost"
           size="sm"
@@ -108,6 +110,7 @@ export default async function CafePage({ params }: CafePageProps) {
                 <p className="text-sm font-medium">Instagram</p>
                 <Button
                   className="mt-2"
+                  nativeButton={false}
                   render={
                     <a
                       href={instagramUrl(cafe.instagram)}
@@ -125,12 +128,11 @@ export default async function CafePage({ params }: CafePageProps) {
               <Separator />
               <div className="rounded-lg border bg-muted/30 p-4">
                 <p className="text-sm font-medium">Geolocalización</p>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  {cafe.locationPlaceholder}
-                </p>
-                <div className="mt-4 grid h-40 place-items-center rounded-md border border-dashed text-center text-sm text-muted-foreground">
-                  Mapa próximamente
-                </div>
+                <CafeMap
+                  addresses={cafe.addresses}
+                  className="mt-4 h-48"
+                  name={cafe.name}
+                />
               </div>
             </CardContent>
           </Card>
