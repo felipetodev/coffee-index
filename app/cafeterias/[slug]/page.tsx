@@ -9,7 +9,13 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { cafes, getCafeBySlug, instagramUrl } from "@/lib/cafes"
+import {
+  cafeFeatureLabels,
+  cafes,
+  getCafeBySlug,
+  googleMapsUrl,
+  instagramUrl,
+} from "@/lib/cafes"
 
 type CafePageProps = {
   params: Promise<{
@@ -68,6 +74,9 @@ export default async function CafePage({ params }: CafePageProps) {
             <div>
               <div className="flex flex-wrap gap-2">
                 <Badge variant="outline">{cafe.commune}</Badge>
+                {cafe.features.map((feature) => (
+                  <Badge key={feature}>{cafeFeatureLabels[feature]}</Badge>
+                ))}
                 {cafe.tags.map((tag) => (
                   <Badge key={tag} variant="secondary">
                     {tag}
@@ -95,10 +104,21 @@ export default async function CafePage({ params }: CafePageProps) {
             </CardHeader>
             <CardContent className="flex flex-col gap-5">
               <div>
+                <p className="text-sm font-medium">Ideal para</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {cafe.features.map((feature) => (
+                    <Badge key={feature} variant="secondary">
+                      {cafeFeatureLabels[feature]}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+              <Separator />
+              <div>
                 <p className="text-sm font-medium">Dirección</p>
                 <div className="mt-2 flex flex-col gap-2 text-sm text-muted-foreground">
                   {cafe.addresses.map((address) => (
-                    <span className="flex items-start gap-2" key={address}>
+                    <span className="flex items-center gap-2" key={address}>
                       <MapPinIcon className="mt-0.5 shrink-0" />
                       {address}
                     </span>
@@ -127,12 +147,33 @@ export default async function CafePage({ params }: CafePageProps) {
               </div>
               <Separator />
               <div className="rounded-lg border bg-muted/30 p-4">
-                <p className="text-sm font-medium">Geolocalización</p>
+                <p className="text-sm font-medium">Ubicación</p>
                 <CafeMap
                   addresses={cafe.addresses}
                   className="mt-4 h-48"
                   name={cafe.name}
                 />
+                <div className="mt-3 flex flex-col gap-2">
+                  {cafe.addresses.map((address) => (
+                    <Button
+                      key={address}
+                      className="justify-between"
+                      nativeButton={false}
+                      render={
+                        <a
+                          href={googleMapsUrl(address)}
+                          target="_blank"
+                          rel="noreferrer"
+                        />
+                      }
+                      variant="outline"
+                      size="sm"
+                    >
+                      Abrir en Google Maps
+                      <ExternalLinkIcon data-icon="inline-end" />
+                    </Button>
+                  ))}
+                </div>
               </div>
             </CardContent>
           </Card>

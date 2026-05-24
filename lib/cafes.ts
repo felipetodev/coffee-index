@@ -4,6 +4,21 @@ export type CafeImage = {
   src?: string
 }
 
+export const cafeFeatureLabels = {
+  laptop: "Laptop-friendly",
+  cowork: "Para cowork",
+  quiet: "Silencioso",
+  brunch: "Brunch",
+  bakery: "Pastelería",
+  petFriendly: "Pet friendly",
+  outdoor: "Terraza/vereda",
+  dinner: "Noche",
+  groups: "Grupos",
+  design: "Diseño",
+} as const
+
+export type CafeFeature = keyof typeof cafeFeatureLabels
+
 export type Cafe = {
   slug: string
   name: string
@@ -11,6 +26,7 @@ export type Cafe = {
   commune: string
   instagram: string
   description: string
+  features: CafeFeature[]
   tags: string[]
   imagePlaceholders: CafeImage[]
 }
@@ -34,6 +50,7 @@ export const cafes: Cafe[] = [
     instagram: "@artemisa_cocktailbar",
     description:
       "Pioneros en Chile en fusionar cafetería y coctelería, este proyecto de Bar Academy destaca por llevar ambos mundos al más alto nivel. Su distintivo es la combinación: coctelería experimental que integra el grano en mezclas clásicas como su Negroni Coffee Party con base de cold brew. Su precisión de laboratorio les valió el puesto 77 en The South America's 100 Best Coffee Shops.",
+    features: ["design", "dinner", "groups"],
     tags: ["Coffee cocktails", "Especialidad", "Bar"],
     imagePlaceholders: assetImages(
       "artemisa",
@@ -49,6 +66,7 @@ export const cafes: Cafe[] = [
     instagram: "@cafemarelli",
     description:
       "Este proyecto nace con el propósito de rescatar y poner en valor la identidad del histórico barrio obrero ferroviario de San Bernardo, un sector profundamente ligado al trabajo y la vida en torno al tren. Ubicado junto a la Plaza Guarello, el espacio recupera la estética y el espíritu de encuentro de las antiguas cafeterías de barrio. Su gran misión es democratizar el café de especialidad, acercándolo a los vecinos con una propuesta cercana, de calidad y de carácter cotidiano.",
+    features: ["quiet", "groups"],
     tags: ["Barrio", "Especialidad", "Patrimonio"],
     imagePlaceholders: assetImages(
       "marelli",
@@ -64,6 +82,7 @@ export const cafes: Cafe[] = [
     instagram: "@puelocoffeeroasters",
     description:
       "Nació como una evolución técnica para controlar todo el proceso del grano, desde el tueste en origen hasta la taza. Pero este proyecto en la calle Vitacura hizo historia al ganar el premio al mejor diseño de cafetería del mundo en los SCA Coffee Design Awards 2025. El galardón valida un espacio de bellísimo diseño donde arquitectura y funcionalidad conviven en armonía, ofreciendo además la minuciosa cocina que caracteriza a la familia Puelo.",
+    features: ["laptop", "quiet", "design", "groups"],
     tags: ["Roasters", "Diseño", "Premiado"],
     imagePlaceholders: assetImages(
       "pueblo",
@@ -79,6 +98,7 @@ export const cafes: Cafe[] = [
     instagram: "@felixcafe.cl",
     description:
       "Un manifiesto de cómo construir comunidad en pocos metros cuadrados. Su alma reside en constantes pop-ups dominicales: un escenario donde el café se une a la alta cocina en formatos democráticos. Por sus bancas pasan chefs como Álvaro Romero, Nicolás Tapia o Mariano Ramón, quienes salen de sus cocinas para ofrecer tostones, sándwiches de autor y otras preparaciones. Este proyecto liderado por periodistas tiene la virtud de que se apropia sin problemas de la vereda de Coyancura.",
+    features: ["outdoor", "brunch"],
     tags: ["Pop-ups", "Comunidad", "Vereda"],
     imagePlaceholders: assetImages(
       "felix",
@@ -94,6 +114,7 @@ export const cafes: Cafe[] = [
     instagram: "@coffeeculture_cr",
     description:
       "Pioneros desde 2011 y con una ética punk bajo el lema Bigger-than-War, este proyecto liderado por Jake Standerfer es el gran bastión del café de especialidad en Maipú. Desde su centro en General Ordóñez, operan bajo un modelo de comercio directo que supera el comercio justo e importan granos de Etiopía o Ruanda para tostar con casa. Además de su excelencia técnica, consolidan un polo colaborativo junto a iniciativas como Planeta Musgo para el compostaje de sus residuos.",
+    features: ["laptop", "cowork", "groups"],
     tags: ["Roasters", "Comercio directo", "Maipú"],
     imagePlaceholders: assetImages(
       "cculture",
@@ -109,6 +130,7 @@ export const cafes: Cafe[] = [
     instagram: "@mirlo_scl",
     description:
       "Al unificar una antigua casona de Providencia para transformarla en un refugio donde todo se hace desde cero, se convirtió en una joya de barrio. Liderada por sus dueños, su propuesta celebra la cocina estacional con una panadería, bollería y sándwiches que cambian semana a semana, siempre acompañados de gran café.",
+    features: ["quiet", "brunch", "bakery"],
     tags: ["Casona", "Panadería", "Barrio"],
     imagePlaceholders: assetImages(
       "mirlo",
@@ -124,6 +146,7 @@ export const cafes: Cafe[] = [
     instagram: "@cafeblackmamba",
     description:
       "Inspirado en la cultura cafetera de Melbourne, este refugio de Manuel Montt destaca por su consistencia. Tras dar un gran salto estético con una aplaudida renovación a cargo de Estudio Bravo, equilibra diseño de autor y calidez, consolidando una propuesta que ocupa el puesto 88 de The South America's 100 Best Coffee Shops.",
+    features: ["laptop", "design"],
     tags: ["Melbourne", "Diseño", "Especialidad"],
     imagePlaceholders: assetImages(
       "blackmamba",
@@ -139,6 +162,7 @@ export const cafes: Cafe[] = [
     instagram: "@joseyjose.cafe",
     description:
       "Escondido en la galería del Teatro Ictus en Lastarria, este oasis retro rinde homenaje en su nombre a José Victorino Lastarria y al Divino Anticristo. Con un patio interior lleno de verde, ofrece una impecable barra junto a Asunto Coffee, ideales para acompañar sus aplaudidas tostadas con hummus y encurtidos.",
+    features: ["quiet", "brunch", "outdoor"],
     tags: ["Lastarria", "Patio", "Retro"],
     imagePlaceholders: assetImages(
       "josejose",
@@ -154,6 +178,7 @@ export const cafes: Cafe[] = [
     instagram: "@patonejo.cl",
     description:
       "Nació como una ventana al paso en Simón Bolívar y su éxito los llevó a abrir una preciosa casa esquina frente a la Plaza Augusto D'Halmar. Fundado por Cristóbal Cox y Sasha Asboli, este rincón une cocina y diseño. Su propuesta destaca por una panadería y bollería hecha desde cero en casa, una vocación de barrio y una cafetería que opera en alianza con la tradicional tostaduría Llama.",
+    features: ["brunch", "bakery", "outdoor"],
     tags: ["Panadería", "Diseño", "Barrio"],
     imagePlaceholders: assetImages(
       "patonejo",
@@ -169,6 +194,7 @@ export const cafes: Cafe[] = [
     instagram: "@cafetriciclo",
     description:
       "Pasó de ser una barra itinerante en bicicleta a consolidarse en un luminoso refugio patrimonial de Bellas Artes. Sede de su propia tostaduría, Café 3 Ciclos, sus granos vienen en frascos ilustrados por artistas locales. Atentos a sus noches de viernes y sábado, cuando muta en una aplaudida pizzería napolitana pop-up.",
+    features: ["quiet", "dinner", "groups"],
     tags: ["Bellas Artes", "Tostaduría", "Pop-up"],
     imagePlaceholders: assetImages(
       "triciclo",
@@ -184,6 +210,7 @@ export const cafes: Cafe[] = [
     instagram: "@dosiscoffeelab",
     description:
       "Distintas comunidades creativas han hecho de sus dos locales en la comuna su punto de encuentro. Alejada de los espacios neutros, Dosis ofrece una experiencia sensorial rica en texturas y colores, porque fue diseñada como vitrina viva para el talento y la manufactura nacional. Esa audacia se traslada a una carta innovadora que brilla por su barra fría, sus mezclas únicas como espresso kombucha o matcha frambuesa, sándwiches y pastelería inclusiva.",
+    features: ["laptop", "cowork", "brunch", "design"],
     tags: ["Creativo", "Barra fría", "Inclusivo"],
     imagePlaceholders: assetImages(
       "dosis",
@@ -202,6 +229,7 @@ export const cafes: Cafe[] = [
     instagram: "@justiciacafe",
     description:
       "Tras nacer en Providencia, este proyecto de Marcela Seguel y Constanza Briones escaló a los grandes enclaves patrimoniales de la Alameda. Primero se instalaron en la Biblioteca Nacional con un respetuoso e imponente diseño de Oficina Bravo y Pablo González, y ahora acaban de abrir en la Casa Central de la Universidad de Chile. Un refugio barrista de alta gama e infraestructura monumental que convive de forma orgánica con investigadores, estudiantes y el ritmo del centro.",
+    features: ["laptop", "quiet", "design"],
     tags: ["Patrimonio", "Alameda", "Biblioteca"],
     imagePlaceholders: assetImages(
       "justicia",
@@ -217,6 +245,7 @@ export const cafes: Cafe[] = [
     instagram: "@lahuerfana.cafeteria",
     description:
       "Nacida en el Barrio Yungay, esta cafetería se instaló en el corazón restaurado del Palacio Pereira, permitiendo habitar el histórico edificio gubernamental a través del café de especialidad. Hoy cuentan con una segunda sede en Barrio Italia equipada con cocina propia, donde elaboran diariamente una pastelería artesanal honesta y consistente. Destacan sus húmedos brownies, muffins de temporada y galletones horneados en casa que complementan su impecable barra.",
+    features: ["quiet", "bakery", "design"],
     tags: ["Palacio Pereira", "Pastelería", "Patrimonio"],
     imagePlaceholders: assetImages(
       "huerfana",
@@ -232,6 +261,7 @@ export const cafes: Cafe[] = [
     instagram: "@lovercafeteria",
     description:
       "A pasos de Metro Escuela Militar, este refugio pet friendly tiene como protagonista al horno y a la pastelería técnica. Su fundadora, la chef Camila Elizalde, impone un rigor absoluto en el tratamiento del hojaldre, con croissants de laminado perfecto y tartas de autor que complementan su barra de café de especialidad. Su vitrina sorprende constantemente gracias a sus aplaudidas colecciones temáticas de edición limitada para fechas especiales.",
+    features: ["petFriendly", "bakery", "brunch"],
     tags: ["Pastelería", "Pet friendly", "Hojaldre"],
     imagePlaceholders: assetImages(
       "lover",
@@ -247,6 +277,7 @@ export const cafes: Cafe[] = [
     instagram: "@casaciencafe",
     description:
       "En la esquina de San Ignacio y Alonso de Ovalle, en una casa de 1906 diseñada por el arquitecto Ricardo Larraín Bravo, Casa Cien acaba de inaugurar su segundo café. Emprendimiento liderado por los arquitectos Andrea Reyes y Víctor Droguett, es una vistosa oda a la calidad de su principal insumo y la belleza de la mansión, que es al mismo tiempo un museo para homenajear al hombre que diseñó la Iglesia de los Sacramentinos y el barrio Huemul.",
+    features: ["quiet", "design", "groups"],
     tags: ["Arquitectura", "Mansión", "Museo"],
     imagePlaceholders: assetImages(
       "ccien",
@@ -262,6 +293,7 @@ export const cafes: Cafe[] = [
     instagram: "@pausacafeteriacl",
     description:
       "Impulsado por tres socios de origen sureño, este refugio habita una imponente casona de 1900 a pasos de Metro Santa Isabel. El proyecto destaca por su cocina y pastelería propia elaborada a diario, una barra de café de especialidad y una carta que invita a desayunar todo el día con opciones de brunch y sándwiches caseros.",
+    features: ["brunch", "bakery", "groups"],
     tags: ["Brunch", "Casona", "Pastelería"],
     imagePlaceholders: assetImages(
       "pausa",
@@ -277,6 +309,7 @@ export const cafes: Cafe[] = [
     instagram: "@somoszencafeteria",
     description:
       "Instalado en un edificio histórico restaurado en calle Bandera, este refugio conecta patrimonio y vida comunitaria. Funciona bajo un modelo de economía circular que colabora exclusivamente con pymes y artesanos locales. Ofrece café de especialidad, bebidas de autor y una propuesta inclusiva con opciones veganas y sin gluten.",
+    features: ["laptop", "cowork", "quiet"],
     tags: ["Circular", "Vegano", "Patrimonio"],
     imagePlaceholders: assetImages(
       "zen",
@@ -292,6 +325,7 @@ export const cafes: Cafe[] = [
     instagram: "@barrab.maipu",
     description:
       "En plena Av. Los Pajaritos, esta barra aliada con Panadería 101 rompe esquemas con un diseño abierto que elimina las barreras entre el barista y el público. Su propuesta equilibra el café de alta gama con panes de masa madre y una aplaudida coctelería de autor sin alcohol, como su coffee tonic de naranja y jengibre.",
+    features: ["bakery", "groups", "design"],
     tags: ["Barra abierta", "Masa madre", "Sin alcohol"],
     imagePlaceholders: assetImages(
       "barrab",
@@ -307,6 +341,7 @@ export const cafes: Cafe[] = [
     instagram: "@cafemagnolio.cl",
     description:
       "Concebido como la extensión del living o el patio de un hogar, habita una hermosa propiedad de 1938 construida por un panadero español. Su propuesta, cocreada por la chef Catalina Domínguez, ofrece una atmósfera relajada con excelente música, cocina honesta de elaboración propia y pastelería seleccionada de pymes.",
+    features: ["quiet", "brunch", "bakery", "groups"],
     tags: ["Living", "Cocina honesta", "Pymes"],
     imagePlaceholders: assetImages(
       "magnolio",
@@ -322,6 +357,7 @@ export const cafes: Cafe[] = [
     instagram: "@laforestacoffee",
     description:
       "A pasos de la Costanera Center, este oasis diseñado para la pausa prolongada aísla el ruido urbano con vegetación y el sonido de una pileta de agua. Fundado por sureñas, traslada la calidez austral a una repostería artesanal hecha en casa que rescata ingredientes como el maqui, ideal para acompañar su barra de café de especialidad. Un precioso formato pet friendly que también funciona para celebrar eventos privados.",
+    features: ["quiet", "petFriendly", "bakery", "groups"],
     tags: ["Oasis", "Repostería", "Pet friendly"],
     imagePlaceholders: assetImages(
       "foresta",
@@ -341,4 +377,10 @@ export function getCafeBySlug(slug: string) {
 
 export function instagramUrl(handle: string) {
   return `https://instagram.com/${handle.replace("@", "")}`
+}
+
+export function googleMapsUrl(address: string) {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    `${address}, Chile`
+  )}`
 }

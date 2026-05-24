@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState, useSyncExternalStore } from "react"
 import {
   ArrowUpRightIcon,
   CoffeeIcon,
@@ -34,33 +34,63 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
-import type { Cafe } from "@/lib/cafes"
-import { communes, instagramUrl } from "@/lib/cafes"
+import type { Cafe, CafeFeature } from "@/lib/cafes"
+import {
+  cafeFeatureLabels,
+  communes,
+  googleMapsUrl,
+  instagramUrl,
+} from "@/lib/cafes"
 
 type CafeCatalogProps = {
   cafes: Cafe[]
 }
 
 const SAVED_CAFES_STORAGE_KEY = "cafeteria.saved-cafes"
+const SAVED_CAFES_CHANGE_EVENT = "cafeteria:saved-cafes-change"
+
+function subscribeToSavedCafes(onStoreChange: () => void) {
+  window.addEventListener("storage", onStoreChange)
+  window.addEventListener(SAVED_CAFES_CHANGE_EVENT, onStoreChange)
+
+  return () => {
+    window.removeEventListener("storage", onStoreChange)
+    window.removeEventListener(SAVED_CAFES_CHANGE_EVENT, onStoreChange)
+  }
+}
+
+function getSavedCafesSnapshot() {
+  return window.localStorage.getItem(SAVED_CAFES_STORAGE_KEY) ?? "[]"
+}
+
+function getSavedCafesServerSnapshot() {
+  return "[]"
+}
+
+function writeSavedCafeSlugs(slugs: string[]) {
+  window.localStorage.setItem(SAVED_CAFES_STORAGE_KEY, JSON.stringify(slugs))
+  window.dispatchEvent(new Event(SAVED_CAFES_CHANGE_EVENT))
+}
 
 export function CafeCatalog({ cafes }: CafeCatalogProps) {
   const [query, setQuery] = useState("")
   const [commune, setCommune] = useState("Todas")
-  const [hasLoadedSavedCafes, setHasLoadedSavedCafes] = useState(false)
-  const [savedCafeSlugs, setSavedCafeSlugs] = useState<string[]>([])
+  const [selectedFeature, setSelectedFeature] = useState<CafeFeature | "Todas">(
+    "Todas"
+  )
 
-  useEffect(() => {
+  const savedCafeSlugsSnapshot = useSyncExternalStore(
+    subscribeToSavedCafes,
+    getSavedCafesSnapshot,
+    getSavedCafesServerSnapshot
+  )
+
+  const savedCafeSlugs = useMemo(() => {
     try {
-      const storedValue = window.localStorage.getItem(SAVED_CAFES_STORAGE_KEY)
-
-      if (!storedValue) {
-        return
-      }
-
-      const parsedValue = JSON.parse(storedValue)
+      const parsedValue = JSON.parse(savedCafeSlugsSnapshot)
 
       if (!Array.isArray(parsedValue)) {
-        return
+        return []
       }
 
       const knownSlugs = new Set(cafes.map((cafe) => cafe.slug))
@@ -69,30 +99,19 @@ export function CafeCatalog({ cafes }: CafeCatalogProps) {
           typeof slug === "string" && knownSlugs.has(slug)
       )
 
-      setSavedCafeSlugs([...new Set(storedSlugs)])
+      return [...new Set(storedSlugs)]
     } catch {
-      window.localStorage.removeItem(SAVED_CAFES_STORAGE_KEY)
-    } finally {
-      setHasLoadedSavedCafes(true)
+      return []
     }
-  }, [cafes])
-
-  useEffect(() => {
-    if (!hasLoadedSavedCafes) {
-      return
-    }
-
-    window.localStorage.setItem(
-      SAVED_CAFES_STORAGE_KEY,
-      JSON.stringify(savedCafeSlugs)
-    )
-  }, [hasLoadedSavedCafes, savedCafeSlugs])
+  }, [cafes, savedCafeSlugsSnapshot])
 
   const filteredCafes = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase()
 
     return cafes.filter((cafe) => {
       const matchesCommune = commune === "Todas" || cafe.commune === commune
+      const matchesFeature =
+        selectedFeature === "Todas" || cafe.features.includes(selectedFeature)
       const matchesQuery =
         normalizedQuery.length === 0 ||
         [
@@ -100,15 +119,16 @@ export function CafeCatalog({ cafes }: CafeCatalogProps) {
           cafe.commune,
           cafe.instagram,
           cafe.addresses.join(" "),
+          cafe.features.map((feature) => cafeFeatureLabels[feature]).join(" "),
           cafe.tags.join(" "),
         ]
           .join(" ")
           .toLowerCase()
           .includes(normalizedQuery)
 
-      return matchesCommune && matchesQuery
+      return matchesCommune && matchesFeature && matchesQuery
     })
-  }, [cafes, commune, query])
+  }, [cafes, commune, query, selectedFeature])
 
   const savedCafes = useMemo(
     () =>
@@ -119,10 +139,10 @@ export function CafeCatalog({ cafes }: CafeCatalogProps) {
   )
 
   const toggleSavedCafe = (slug: string) => {
-    setSavedCafeSlugs((current) =>
-      current.includes(slug)
-        ? current.filter((savedSlug) => savedSlug !== slug)
-        : [...current, slug]
+    writeSavedCafeSlugs(
+      savedCafeSlugs.includes(slug)
+        ? savedCafeSlugs.filter((savedSlug) => savedSlug !== slug)
+        : [...savedCafeSlugs, slug]
     )
   }
 
@@ -172,12 +192,29 @@ export function CafeCatalog({ cafes }: CafeCatalogProps) {
               ))}
             </div>
           </div>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {[
+              ["Todas", "Todas"],
+              ...Object.entries(cafeFeatureLabels),
+            ].map(([feature, label]) => (
+              <Button
+                key={feature}
+                variant={selectedFeature === feature ? "default" : "outline"}
+                size="sm"
+                onClick={() =>
+                  setSelectedFeature(feature as CafeFeature | "Todas")
+                }
+              >
+                {label}
+              </Button>
+            ))}
+          </div>
         </div>
       </header>
 
       <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
         <div className="min-h-0" suppressHydrationWarning>
-          {hasLoadedSavedCafes && savedCafes.length > 0 && (
+          {savedCafes.length > 0 && (
             <SavedCafesCarousel
               cafes={savedCafes}
               onToggleSaved={toggleSavedCafe}
@@ -191,9 +228,8 @@ export function CafeCatalog({ cafes }: CafeCatalogProps) {
               {filteredCafes.length} resultados
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Información inicial basada en la guía publicada por La Tercera,
-              con fotografías y geolocalización reservadas para una siguiente
-              carga.
+              Usa los filtros para encontrar cafés tranquilos, con brunch,
+              aptos para laptop o buenos para juntarse.
             </p>
           </div>
           <Badge variant="secondary" className="w-fit">
@@ -299,14 +335,8 @@ function CafeCard({
         </Button>
       </CardContent>
       <CardHeader>
-        <div className="flex flex-wrap gap-2">
-          <Badge variant="outline">{cafe.commune}</Badge>
-          {cafe.addresses.length > 1 && (
-            <Badge variant="secondary">Múltiples sedes</Badge>
-          )}
-        </div>
         <CardTitle className="text-lg">{cafe.name}</CardTitle>
-        <CardDescription className="flex items-start gap-2">
+        <CardDescription className="flex items-center gap-2">
           <MapPinIcon className="mt-0.5 shrink-0" />
           <span>{cafe.addresses[0]}</span>
         </CardDescription>
@@ -316,6 +346,15 @@ function CafeCard({
           {cafe.description}
         </p>
         <div className="flex flex-wrap gap-2">
+          <Badge variant="outline">{cafe.commune}</Badge>
+          {cafe.features.slice(0, 3).map((feature) => (
+            <Badge key={feature} variant="outline">
+              {cafeFeatureLabels[feature]}
+            </Badge>
+          ))}
+          {cafe.addresses.length > 1 && (
+            <Badge variant="secondary">Múltiples sedes</Badge>
+          )}
           {cafe.tags.slice(0, 3).map((tag) => (
             <Badge key={tag} variant="secondary">
               {tag}
@@ -362,6 +401,11 @@ function CafeQuickView({ cafe }: { cafe: Cafe }) {
               {cafe.description}
             </p>
             <div className="flex flex-wrap gap-2">
+              {cafe.features.map((feature) => (
+                <Badge key={feature} variant="outline">
+                  {cafeFeatureLabels[feature]}
+                </Badge>
+              ))}
               {cafe.tags.map((tag) => (
                 <Badge key={tag} variant="secondary">
                   {tag}
@@ -380,12 +424,33 @@ function CafeQuickView({ cafe }: { cafe: Cafe }) {
             </div>
             <Separator />
             <div>
-              <p className="text-sm font-medium">Geolocalización</p>
+              <p className="text-sm font-medium">Ubicación</p>
               <CafeMap
                 addresses={cafe.addresses}
                 className="mt-3 h-44"
                 name={cafe.name}
               />
+              <div className="mt-2 flex flex-col gap-2">
+                {cafe.addresses.map((address) => (
+                  <Button
+                    key={address}
+                    className="justify-between"
+                    nativeButton={false}
+                    render={
+                      <a
+                        href={googleMapsUrl(address)}
+                        target="_blank"
+                        rel="noreferrer"
+                      />
+                    }
+                    variant="outline"
+                    size="sm"
+                  >
+                    Abrir en Google Maps
+                    <ExternalLinkIcon data-icon="inline-end" />
+                  </Button>
+                ))}
+              </div>
             </div>
             <ButtonGroup className="mt-auto">
               <Button
