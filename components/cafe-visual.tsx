@@ -10,7 +10,7 @@ type CafeVisualProps = {
   loading?: "eager" | "lazy"
 }
 
-export function CafeVisual({ label, name, src, className, loading }: CafeVisualProps) {
+export function CafeVisual({ label, name, src, className, loading = "lazy" }: CafeVisualProps) {
   if (src) {
     return (
       <div

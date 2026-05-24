@@ -27,6 +27,7 @@ type CafeGalleryProps = {
   className?: string
   itemClassName?: string
   showAllPhotosCta?: boolean
+  laodImageEager?: boolean
 }
 
 export function CafeGallery({
@@ -35,12 +36,13 @@ export function CafeGallery({
   className,
   itemClassName,
   showAllPhotosCta = false,
+  laodImageEager
 }: CafeGalleryProps) {
   return (
     <div className="relative">
       <Carousel className={className} opts={{ align: "start" }}>
         <CarouselContent>
-          {images.map((image) => (
+          {images.map((image, index) => (
             <CarouselItem key={image.src ?? image.label}>
               {image.href ? (
                 <Link
@@ -52,6 +54,7 @@ export function CafeGallery({
                     label={image.label}
                     name={name}
                     src={image.src}
+                    loading={laodImageEager && index === 0 ? "eager" : "lazy"}
                   />
                 </Link>
               ) : (
@@ -60,6 +63,7 @@ export function CafeGallery({
                   label={image.label}
                   name={name}
                   src={image.src}
+                  loading={laodImageEager && index === 0 ? "eager" : "lazy"}
                 />
               )}
             </CarouselItem>
