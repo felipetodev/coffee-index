@@ -16,6 +16,12 @@ import {
   googleMapsUrl,
   instagramUrl,
 } from "@/lib/cafes"
+import {
+  cafeImageUrl,
+  cafePath,
+  createCafeStructuredData,
+  siteConfig,
+} from "@/lib/seo"
 
 type CafePageProps = {
   params: Promise<{
@@ -41,9 +47,36 @@ export async function generateMetadata({
     }
   }
 
+  const title = `${cafe.name} en ${cafe.commune}`
+
   return {
-    title: cafe.name,
+    title,
     description: cafe.description,
+    alternates: {
+      canonical: cafePath(cafe),
+    },
+    openGraph: {
+      type: "article",
+      url: cafePath(cafe),
+      siteName: siteConfig.name,
+      title,
+      description: cafe.description,
+      locale: siteConfig.locale,
+      images: [
+        {
+          url: cafeImageUrl(cafe),
+          alt: `${cafe.name}, cafetería en ${cafe.commune}`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      site: siteConfig.twitterHandle,
+      creator: siteConfig.twitterHandle,
+      title,
+      description: cafe.description,
+      images: [cafeImageUrl(cafe)],
+    },
   }
 }
 
@@ -57,6 +90,12 @@ export default async function CafePage({ params }: CafePageProps) {
 
   return (
     <main className="min-h-svh bg-background">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(createCafeStructuredData(cafe)),
+        }}
+      />
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-6 sm:px-6 lg:px-8">
         <Button
           className="w-fit"
@@ -95,6 +134,7 @@ export default async function CafePage({ params }: CafePageProps) {
               name={cafe.name}
               images={cafe.imagePlaceholders}
               itemClassName="min-h-[22rem]"
+              showAllPhotosCta
             />
           </div>
 

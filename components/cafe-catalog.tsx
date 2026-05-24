@@ -173,6 +173,7 @@ export function CafeCatalog({ cafes }: CafeCatalogProps) {
             <label className="relative block">
               <SearchIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input
+                id="cafe-search-input"
                 className="h-11 pl-9"
                 placeholder="Buscar por cafetería, comuna, dirección o estilo"
                 value={query}
@@ -335,7 +336,14 @@ function CafeCard({
         </Button>
       </CardContent>
       <CardHeader>
-        <CardTitle className="text-lg">{cafe.name}</CardTitle>
+        <CardTitle className="text-lg">
+          <Link
+            className="rounded-sm transition-colors hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+            href={`/cafeterias/${cafe.slug}`}
+          >
+            {cafe.name}
+          </Link>
+        </CardTitle>
         <CardDescription className="flex items-center gap-2">
           <MapPinIcon className="mt-0.5 shrink-0" />
           <span>{cafe.addresses[0]}</span>
@@ -379,8 +387,8 @@ function CafeCard({
 
 function CafeQuickView({ cafe }: { cafe: Cafe }) {
   return (
-    <Dialog>
-      <DialogTrigger render={<Button variant="outline" size="sm" />}>
+    <Dialog key={cafe.slug}>
+      <DialogTrigger render={<Button variant="outline" className="cursor-pointer" size="sm" />}>
         Vista rápida
       </DialogTrigger>
       <DialogContent className="max-h-[calc(100svh-2rem)] overflow-y-auto sm:max-w-2xl">

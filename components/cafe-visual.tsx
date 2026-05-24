@@ -7,9 +7,10 @@ type CafeVisualProps = {
   name: string
   src?: string
   className?: string
+  loading?: "eager" | "lazy"
 }
 
-export function CafeVisual({ label, name, src, className }: CafeVisualProps) {
+export function CafeVisual({ label, name, src, className, loading }: CafeVisualProps) {
   if (src) {
     return (
       <div
@@ -22,6 +23,7 @@ export function CafeVisual({ label, name, src, className }: CafeVisualProps) {
           src={src}
           alt={`${name}: ${label}`}
           fill
+          loading={loading}
           className="object-cover"
           sizes="(min-width: 1280px) 390px, (min-width: 640px) 50vw, 100vw"
         />
