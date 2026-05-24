@@ -320,7 +320,7 @@ function CafeCard({
           name={cafe.name}
           images={cafe.imagePlaceholders}
           itemClassName="min-h-52"
-          laodImageEager={index < 3}
+          loadImageEager={index < 3}
         />
         <Button
           className="absolute right-6 top-4 rounded-full bg-background/75 text-foreground shadow-sm ring-1 ring-border backdrop-blur hover:bg-background"

@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useMemo, useState } from "react"
 import { ImagesIcon } from "lucide-react"
 
 import {
@@ -19,6 +20,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { Skeleton } from "@/components/ui/skeleton"
 import type { CafeImage } from "@/lib/cafes"
 
 type CafeGalleryProps = {
@@ -27,7 +29,7 @@ type CafeGalleryProps = {
   className?: string
   itemClassName?: string
   showAllPhotosCta?: boolean
-  laodImageEager?: boolean
+  loadImageEager?: boolean
 }
 
 export function CafeGallery({
@@ -36,7 +38,7 @@ export function CafeGallery({
   className,
   itemClassName,
   showAllPhotosCta = false,
-  laodImageEager
+  loadImageEager,
 }: CafeGalleryProps) {
   return (
     <div className="relative">
@@ -54,7 +56,7 @@ export function CafeGallery({
                     label={image.label}
                     name={name}
                     src={image.src}
-                    loading={laodImageEager && index === 0 ? "eager" : "lazy"}
+                    loading={loadImageEager && index === 0 ? "eager" : "lazy"}
                   />
                 </Link>
               ) : (
@@ -63,7 +65,7 @@ export function CafeGallery({
                   label={image.label}
                   name={name}
                   src={image.src}
-                  loading={laodImageEager && index === 0 ? "eager" : "lazy"}
+                  loading={loadImageEager && index === 0 ? "eager" : "lazy"}
                 />
               )}
             </CarouselItem>
@@ -87,6 +89,18 @@ function AllCafePhotosDialog({
   images: CafeImage[]
   name: string
 }) {
+  const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({})
+
+  const dialogImages = useMemo(
+    () =>
+      images.map((image, index) => ({
+        ...image,
+        key: image.src ?? `${image.label}-${index}`,
+        skeletonClassName: index % 3 === 1 ? "h-80" : "h-56",
+      })),
+    [images]
+  )
+
   return (
     <Dialog key="cafe-gallery-dialog">
       <DialogTrigger
@@ -107,23 +121,38 @@ function AllCafePhotosDialog({
           <DialogTitle>{name}</DialogTitle>
         </DialogHeader>
         <div className="columns-1 gap-4 sm:columns-2">
-          {images.map((image, i) => (
+          {dialogImages.map((image, i) => (
             <figure
               className="mb-4 break-inside-avoid overflow-hidden rounded-lg border bg-muted"
-              key={image.src ?? image.label}
+              key={image.key}
             >
               {image.src ? (
-                // The browser preserves each asset ratio here, which is what makes
-                // the CSS columns behave like a light masonry gallery.
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={image.src}
-                  alt={`${name}: ${image.label}`}
-                  className="h-auto w-full"
+                <>
+                  {!loadedImages[image.key] ? (
+                    <Skeleton className={image.skeletonClassName} />
+                  ) : null}
+                  {/* The browser preserves each asset ratio here, which is what makes
+                  the CSS columns behave like a light masonry gallery. */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={image.src}
+                    alt={`${name}: ${image.label}`}
+                    className={loadedImages[image.key] ? "h-auto w-full" : "hidden"}
+                    loading={i < 3 ? "eager" : "lazy"}
+                    onLoad={() =>
+                      setLoadedImages((current) => ({
+                        ...current,
+                        [image.key]: true,
+                      }))
+                    }
+                  />
+                </>
+              ) : (
+                <CafeVisual
+                  label={image.label}
+                  name={name}
                   loading={i < 3 ? "eager" : "lazy"}
                 />
-              ) : (
-                <CafeVisual label={image.label} name={name} loading={i < 3 ? "eager" : "lazy"} />
               )}
               <figcaption className="bg-background px-3 py-2 text-sm text-muted-foreground">
                 {image.label}
