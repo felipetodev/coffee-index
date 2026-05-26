@@ -1,7 +1,7 @@
 {
   "name": "The Coffee Index",
   "short_name": "Coffee Index",
-  "description": "Guía curatorial de cafeterías de especialidad en Chile.",
+  "description": "Guía de cafeterías de especialidad en Chile.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f8f5ef",

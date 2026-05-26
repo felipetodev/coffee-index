@@ -1,12 +1,12 @@
-import type { Cafe } from "@/lib/cafes"
 import { instagramUrl } from "@/lib/cafes"
+import type { CafeViewModel } from "@/lib/types"
 
 export const siteConfig = {
   url: "https://coffeeindex.vercel.app",
   name: "The Coffee Index",
   title: "The Coffee Index | Cafeterías en Chile",
   description:
-    "Descubre cafeterías de especialidad en Santiago de Chile con fotos, direcciones, mapas, filtros por ambiente y fichas curatoriales.",
+    "Descubre cafeterías de especialidad en Santiago de Chile con fotos, direcciones, mapas, filtros por ambiente y fichas detalladas.",
   locale: "es_CL",
   language: "es-CL",
   twitterHandle: "@thecoffeeindex",
@@ -17,15 +17,15 @@ export function absoluteUrl(path = "") {
   return new URL(path, siteConfig.url).toString()
 }
 
-export function cafePath(cafe: Cafe) {
+export function cafePath(cafe: Pick<CafeViewModel, "slug">) {
   return `/cafeterias/${cafe.slug}`
 }
 
-export function cafeUrl(cafe: Cafe) {
+export function cafeUrl(cafe: Pick<CafeViewModel, "slug">) {
   return absoluteUrl(cafePath(cafe))
 }
 
-export function cafeImageUrl(cafe: Cafe) {
+export function cafeImageUrl(cafe: Pick<CafeViewModel, "imagePlaceholders">) {
   const image = cafe.imagePlaceholders[0]?.src
 
   return image ? absoluteUrl(image) : absoluteUrl("/opengraph-image")
@@ -47,7 +47,7 @@ export function createWebsiteStructuredData() {
   }
 }
 
-export function createCafeStructuredData(cafe: Cafe) {
+export function createCafeStructuredData(cafe: CafeViewModel) {
   return {
     "@context": "https://schema.org",
     "@type": "CafeOrCoffeeShop",
@@ -62,7 +62,7 @@ export function createCafeStructuredData(cafe: Cafe) {
   }
 }
 
-export function createCafeItemListStructuredData(cafes: Cafe[]) {
+export function createCafeItemListStructuredData(cafes: CafeViewModel[]) {
   return {
     "@context": "https://schema.org",
     "@type": "ItemList",

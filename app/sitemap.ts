@@ -1,11 +1,15 @@
 import type { MetadataRoute } from "next"
 
-import { cafes } from "@/lib/cafes"
+import { getPublishedCafes } from "@/lib/data/cafes"
 import { siteConfig } from "@/lib/seo"
 
 const siteUrl = siteConfig.url
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export const revalidate = 3600
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const cafes = await getPublishedCafes()
+
   return [
     {
       url: siteUrl,

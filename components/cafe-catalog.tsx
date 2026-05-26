@@ -4,8 +4,10 @@ import Link from "next/link"
 import { useMemo, useState, useSyncExternalStore } from "react"
 import {
   ArrowUpRightIcon,
+  BadgeCheckIcon,
   CoffeeIcon,
   ExternalLinkIcon,
+  GlobeIcon,
   HeartIcon,
   MapPinIcon,
   SearchIcon,
@@ -13,6 +15,7 @@ import {
 
 import { CafeGallery } from "@/components/cafe-gallery"
 import { CafeMap } from "@/components/cafe-map"
+import { AuthControls } from "@/components/auth-controls"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
@@ -34,16 +37,15 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
-import type { Cafe, CafeFeature } from "@/lib/cafes"
 import {
-  cafeFeatureLabels,
-  communes,
   googleMapsUrl,
   instagramUrl,
 } from "@/lib/cafes"
+import type { CafeViewModel } from "@/lib/types"
 
 type CafeCatalogProps = {
-  cafes: Cafe[]
+  cafes: CafeViewModel[]
+  canAddLocal?: boolean
 }
 
 const SAVED_CAFES_STORAGE_KEY = "cafeteria.saved-cafes"
@@ -72,12 +74,10 @@ function writeSavedCafeSlugs(slugs: string[]) {
   window.dispatchEvent(new Event(SAVED_CAFES_CHANGE_EVENT))
 }
 
-export function CafeCatalog({ cafes }: CafeCatalogProps) {
+export function CafeCatalog({ cafes, canAddLocal = true }: CafeCatalogProps) {
   const [query, setQuery] = useState("")
   const [commune, setCommune] = useState("Todas")
-  const [selectedFeature, setSelectedFeature] = useState<CafeFeature | "Todas">(
-    "Todas"
-  )
+  const [selectedFeature, setSelectedFeature] = useState("Todas")
 
   const savedCafeSlugsSnapshot = useSyncExternalStore(
     subscribeToSavedCafes,
@@ -111,7 +111,8 @@ export function CafeCatalog({ cafes }: CafeCatalogProps) {
     return cafes.filter((cafe) => {
       const matchesCommune = commune === "Todas" || cafe.commune === commune
       const matchesFeature =
-        selectedFeature === "Todas" || cafe.features.includes(selectedFeature)
+        selectedFeature === "Todas" ||
+        cafe.features.some((feature) => feature.slug === selectedFeature)
       const matchesQuery =
         normalizedQuery.length === 0 ||
         [
@@ -119,7 +120,7 @@ export function CafeCatalog({ cafes }: CafeCatalogProps) {
           cafe.commune,
           cafe.instagram,
           cafe.addresses.join(" "),
-          cafe.features.map((feature) => cafeFeatureLabels[feature]).join(" "),
+          cafe.features.map((feature) => feature.label).join(" "),
           cafe.tags.join(" "),
         ]
           .join(" ")
@@ -134,8 +135,28 @@ export function CafeCatalog({ cafes }: CafeCatalogProps) {
     () =>
       savedCafeSlugs
         .map((slug) => cafes.find((cafe) => cafe.slug === slug))
-        .filter((cafe): cafe is Cafe => Boolean(cafe)),
+        .filter((cafe): cafe is CafeViewModel => Boolean(cafe)),
     [cafes, savedCafeSlugs]
+  )
+
+  const communes = useMemo(
+    () =>
+      Array.from(new Set(cafes.map((cafe) => cafe.commune))).sort((a, b) =>
+        a.localeCompare(b, "es")
+      ),
+    [cafes]
+  )
+
+  const features = useMemo(
+    () =>
+      Array.from(
+        new Map(
+          cafes.flatMap((cafe) =>
+            cafe.features.map((feature) => [feature.slug, feature] as const)
+          )
+        ).values()
+      ).sort((a, b) => a.label.localeCompare(b.label, "es")),
+    [cafes]
   )
 
   const toggleSavedCafe = (slug: string) => {
@@ -150,12 +171,29 @@ export function CafeCatalog({ cafes }: CafeCatalogProps) {
     <div className="flex min-h-svh flex-col bg-background">
       <header className="border-b bg-background/95">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between gap-4">
+            <p className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <CoffeeIcon />
+              The Coffee Index
+            </p>
+            <div className="flex shrink-0 items-center gap-2">
+              {canAddLocal && (
+                <Button
+                  className="h-10 rounded-full px-4"
+                  nativeButton={false}
+                  render={<Link href="/anade-tu-local" />}
+                  variant="ghost"
+                  size="sm"
+                >
+                  Añade tu local
+                </Button>
+              )}
+              <AuthControls />
+            </div>
+          </div>
+
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div className="max-w-2xl">
-              <p className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <CoffeeIcon />
-                The Coffee Index
-              </p>
               <h1 className="mt-2 text-3xl font-medium tracking-tight sm:text-4xl">
                 The index of specialty coffee culture in Chile.
               </h1>
@@ -164,8 +202,8 @@ export function CafeCatalog({ cafes }: CafeCatalogProps) {
                 a encontrar.
               </p>
             </div>
-            <div className="rounded-lg border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
-              {cafes.length} lugares curatoriales
+            <div className="w-fit rounded-lg border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+                {cafes.length} lugares recomendados
             </div>
           </div>
 
@@ -194,19 +232,14 @@ export function CafeCatalog({ cafes }: CafeCatalogProps) {
             </div>
           </div>
           <div className="flex gap-2 overflow-x-auto pb-1">
-            {[
-              ["Todas", "Todas"],
-              ...Object.entries(cafeFeatureLabels),
-            ].map(([feature, label]) => (
+            {[{ slug: "Todas", label: "Todas" }, ...features].map((feature) => (
               <Button
-                key={feature}
-                variant={selectedFeature === feature ? "default" : "outline"}
+                key={feature.slug}
+                variant={selectedFeature === feature.slug ? "default" : "outline"}
                 size="sm"
-                onClick={() =>
-                  setSelectedFeature(feature as CafeFeature | "Todas")
-                }
+                onClick={() => setSelectedFeature(feature.slug)}
               >
-                {label}
+                {feature.label}
               </Button>
             ))}
           </div>
@@ -233,9 +266,6 @@ export function CafeCatalog({ cafes }: CafeCatalogProps) {
               aptos para laptop o buenos para juntarse.
             </p>
           </div>
-          <Badge variant="secondary" className="w-fit">
-            Catálogo beta
-          </Badge>
         </section>
 
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -258,7 +288,7 @@ function SavedCafesCarousel({
   cafes,
   onToggleSaved,
 }: {
-  cafes: Cafe[]
+  cafes: CafeViewModel[]
   onToggleSaved: (slug: string) => void
 }) {
   return (
@@ -308,7 +338,7 @@ function CafeCard({
   isSaved,
   onToggleSaved,
 }: {
-  cafe: Cafe
+  cafe: CafeViewModel
   index: number
   isSaved: boolean
   onToggleSaved: (slug: string) => void
@@ -340,13 +370,19 @@ function CafeCard({
         </Button>
       </CardContent>
       <CardHeader>
-        <CardTitle className="text-lg">
+        <CardTitle className="flex items-center gap-2 text-lg">
           <Link
             className="rounded-sm transition-colors hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             href={`/cafeterias/${cafe.slug}`}
           >
             {cafe.name}
           </Link>
+          {cafe.verificationStatus === "verified" && (
+            <Badge className="bg-[#3295F6]">
+              <BadgeCheckIcon data-icon="inline-start" />
+              Verificado
+            </Badge>
+          )}
         </CardTitle>
         <CardDescription className="flex items-center gap-2">
           <MapPinIcon className="mt-0.5 shrink-0" />
@@ -360,8 +396,8 @@ function CafeCard({
         <div className="flex flex-wrap gap-2">
           <Badge variant="outline">{cafe.commune}</Badge>
           {cafe.features.slice(0, 3).map((feature) => (
-            <Badge key={feature} variant="outline">
-              {cafeFeatureLabels[feature]}
+            <Badge key={feature.slug} variant="outline">
+              {feature.label}
             </Badge>
           ))}
           {cafe.addresses.length > 1 && (
@@ -389,7 +425,9 @@ function CafeCard({
   )
 }
 
-function CafeQuickView({ cafe }: { cafe: Cafe }) {
+function CafeQuickView({ cafe }: { cafe: CafeViewModel }) {
+  const website = cafe.socialLinks?.find((link) => link.platform === "website")
+
   return (
     <Dialog key={cafe.slug}>
       <DialogTrigger render={<Button variant="outline" className="cursor-pointer" size="sm" />}>
@@ -397,7 +435,15 @@ function CafeQuickView({ cafe }: { cafe: Cafe }) {
       </DialogTrigger>
       <DialogContent className="max-h-[calc(100svh-2rem)] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="text-xl">{cafe.name}</DialogTitle>
+          <DialogTitle className="flex items-center gap-2 text-xl">
+            {cafe.name}
+            {cafe.verificationStatus === "verified" && (
+              <Badge variant="secondary">
+                <BadgeCheckIcon data-icon="inline-start" />
+                Verificado
+              </Badge>
+            )}
+          </DialogTitle>
           <DialogDescription>
             {cafe.commune} · {cafe.instagram}
           </DialogDescription>
@@ -414,8 +460,8 @@ function CafeQuickView({ cafe }: { cafe: Cafe }) {
             </p>
             <div className="flex flex-wrap gap-2">
               {cafe.features.map((feature) => (
-                <Badge key={feature} variant="outline">
-                  {cafeFeatureLabels[feature]}
+                <Badge key={feature.slug} variant="outline">
+                  {feature.label}
                 </Badge>
               ))}
               {cafe.tags.map((tag) => (
@@ -425,7 +471,7 @@ function CafeQuickView({ cafe }: { cafe: Cafe }) {
               ))}
             </div>
           </div>
-          <div className="flex flex-col gap-3 rounded-lg border bg-muted/30 p-4">
+          <div className="flex flex-col gap-3 rounded-lg border bg-muted/30 p-4 h-max">
             <div>
               <p className="text-sm font-medium">Dirección</p>
               <div className="mt-2 flex flex-col gap-1 text-sm text-muted-foreground">
@@ -474,6 +520,17 @@ function CafeQuickView({ cafe }: { cafe: Cafe }) {
                 Instagram
                 <ExternalLinkIcon data-icon="inline-end" />
               </Button>
+              {website?.url && (
+                <Button
+                  nativeButton={false}
+                  render={<a href={website.url} target="_blank" rel="noreferrer" />}
+                  variant="outline"
+                  size="sm"
+                >
+                  <GlobeIcon data-icon="inline-start" />
+                  Website
+                </Button>
+              )}
               <Button
                 nativeButton={false}
                 render={<Link href={`/cafeterias/${cafe.slug}`} />}

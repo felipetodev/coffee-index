@@ -40,11 +40,16 @@ export function CafeGallery({
   showAllPhotosCta = false,
   loadImageEager,
 }: CafeGalleryProps) {
+  const galleryImages =
+    images.length > 0
+      ? images
+      : [{ label: "Foto por confirmar" }]
+
   return (
     <div className="relative">
       <Carousel className={className} opts={{ align: "start" }}>
         <CarouselContent>
-          {images.map((image, index) => (
+          {galleryImages.map((image, index) => (
             <CarouselItem key={image.src ?? image.label}>
               {image.href ? (
                 <Link
