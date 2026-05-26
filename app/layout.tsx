@@ -1,7 +1,9 @@
 import { Geist, Geist_Mono } from "next/font/google"
 import type { Metadata, Viewport } from "next"
+import { Toaster } from "sonner"
 
 import "./globals.css"
+import { AuthProvider } from "@/components/auth-provider"
 import { ThemeProvider } from "@/components/theme-provider"
 import { createWebsiteStructuredData, siteConfig } from "@/lib/seo"
 import { cn } from "@/lib/utils"
@@ -99,7 +101,12 @@ export default function RootLayout({
             __html: JSON.stringify(createWebsiteStructuredData()),
           }}
         />
-        <ThemeProvider>{children}</ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            {children}
+            <Toaster richColors position="top-right" />
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   )
