@@ -3,10 +3,10 @@ import { auth } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
+import { isPlatformAdmin } from "@/lib/auth/platform-admin"
 
 const workspaceLinks = [
   ["Perfil", "perfil"],
-  ["Horarios", "horarios"],
   ["Fotos", "fotos"],
   ["Eventos", "eventos"],
   ["Equipo", "equipo"],
@@ -20,9 +20,10 @@ export default async function WorkspaceLayout({
   params: Promise<{ workspaceSlug: string }>
 }) {
   const { workspaceSlug } = await params
-  const { orgSlug } = await auth()
+  const { orgSlug, userId } = await auth()
+  const platformAdmin = await isPlatformAdmin(userId)
 
-  if (orgSlug && orgSlug !== workspaceSlug) {
+  if (!platformAdmin && orgSlug !== workspaceSlug) {
     redirect("/dashboard")
   }
 
