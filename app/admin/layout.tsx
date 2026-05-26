@@ -7,6 +7,7 @@ const adminLinks = [
   ["Submissions", "/admin/submissions"],
   ["Claims", "/admin/claims"],
   ["Cafeterías", "/admin/cafeterias"],
+  ["Reviews", "/admin/reviews"],
   ["Eventos", "/admin/eventos"],
   ["Workspaces", "/admin/workspaces"],
 ] as const
