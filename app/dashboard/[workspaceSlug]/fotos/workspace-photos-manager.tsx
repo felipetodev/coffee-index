@@ -1,6 +1,6 @@
 "use client"
 
-import { useActionState, useEffect, useState } from "react"
+import { useActionState, useEffect } from "react"
 import Image from "next/image"
 import {
   ImageIcon,
@@ -19,6 +19,10 @@ import {
   type PhotoActionState,
 } from "@/app/dashboard/[workspaceSlug]/fotos/actions"
 import type { WorkspacePhoto } from "@/app/dashboard/[workspaceSlug]/fotos/data"
+import {
+  PhotoUploadFields,
+  useSelectedUploadFiles,
+} from "@/components/photo-upload-fields"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -33,12 +37,6 @@ import { Input } from "@/components/ui/input"
 const initialState: PhotoActionState = {}
 const maxPhotos = 3
 const maxPhotoSizeBytes = 1024 * 1024
-const allowedImageTypes = new Set(["image/jpeg", "image/png", "image/webp"])
-
-type SelectedUploadFile = {
-  file: File
-  previewUrl: string
-}
 
 export function WorkspacePhotosManager({
   cafeName,
@@ -53,19 +51,11 @@ export function WorkspacePhotosManager({
     uploadWorkspacePhotosAction,
     initialState
   )
-  const [selectedFiles, setSelectedFiles] = useState<SelectedUploadFile[]>([])
+  const [selectedFiles, setSelectedFiles] = useSelectedUploadFiles()
   const remainingSlots = Math.max(maxPhotos - photos.length, 0)
   const uploadDisabled = remainingSlots === 0 || isUploading
 
   useToastFromState(uploadState)
-
-  useEffect(() => {
-    return () => {
-      for (const item of selectedFiles) {
-        URL.revokeObjectURL(item.previewUrl)
-      }
-    }
-  }, [selectedFiles])
 
   return (
     <section className="grid gap-4">
@@ -91,117 +81,14 @@ export function WorkspacePhotosManager({
         <CardContent>
           <form action={uploadAction} className="grid gap-4">
             <input name="workspaceSlug" type="hidden" value={workspaceSlug} />
-            <label className="grid gap-2 text-sm font-medium">
-              Imágenes (puedes seleccionar varias a la vez)
-              <Input
-                accept="image/jpeg,image/png,image/webp"
-                disabled={uploadDisabled}
-                max={remainingSlots}
-                multiple
-                name="photos"
-                onChange={(event) => {
-                  const files = Array.from(event.currentTarget.files ?? [])
-
-                  for (const item of selectedFiles) {
-                    URL.revokeObjectURL(item.previewUrl)
-                  }
-
-                  if (files.length > remainingSlots) {
-                    event.currentTarget.value = ""
-                    setSelectedFiles([])
-                    toast.error(
-                      `Puedes subir ${remainingSlots} foto${
-                        remainingSlots === 1 ? "" : "s"
-                      } más.`
-                    )
-                    return
-                  }
-
-                  const invalidType = files.find(
-                    (file) => !allowedImageTypes.has(file.type)
-                  )
-
-                  if (invalidType) {
-                    event.currentTarget.value = ""
-                    setSelectedFiles([])
-                    toast.error("Solo se permiten imágenes JPG, PNG o WebP.")
-                    return
-                  }
-
-                  const oversizedFile = files.find(
-                    (file) => file.size > maxPhotoSizeBytes
-                  )
-
-                  if (oversizedFile) {
-                    event.currentTarget.value = ""
-                    setSelectedFiles([])
-                    toast.error("Cada imagen debe pesar 1 MB o menos.")
-                    return
-                  }
-
-                  setSelectedFiles(
-                    files.map((file) => ({
-                      file,
-                      previewUrl: URL.createObjectURL(file),
-                    }))
-                  )
-                }}
-                required
-                type="file"
-              />
-            </label>
-            <div className="grid gap-3 rounded-lg border bg-muted/20 p-3">
-              <div>
-                <p className="text-sm font-medium">Textos alternativos</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Escribe una descripción corta para cada imagen.
-                </p>
-              </div>
-              {Array.from({ length: Math.max(selectedFiles.length, 1) }).map(
-                (_, index) => {
-                  const selectedFile = selectedFiles[index]
-                  const file = selectedFile?.file
-
-                  return (
-                    <div
-                      className="grid gap-3 rounded-lg border bg-background p-2 sm:grid-cols-[96px_1fr] sm:items-center"
-                      key={
-                        file
-                          ? `${file.name}-${file.lastModified}-${index}`
-                          : "default-alt-text"
-                      }
-                    >
-                      <div className="relative aspect-[4/3] overflow-hidden rounded-md bg-muted">
-                        {selectedFile ? (
-                          <Image
-                            alt={`Preview foto ${index + 1}`}
-                            className="h-full w-full object-cover"
-                            fill
-                            sizes="96px"
-                            src={selectedFile.previewUrl}
-                            unoptimized
-                          />
-                        ) : (
-                          <div className="grid h-full place-items-center">
-                            <ImageIcon className="size-5 text-muted-foreground" />
-                          </div>
-                        )}
-                      </div>
-                      <label className="grid gap-2 text-sm font-medium">
-                        Foto {index + 1}
-                        <Input
-                          disabled={uploadDisabled}
-                          name="altTexts"
-                          placeholder={
-                            file?.name ?? "Interior del local, barra de café..."
-                          }
-                        />
-                      </label>
-                    </div>
-                  )
-                }
-              )}
-            </div>
+            <PhotoUploadFields
+              disabled={uploadDisabled}
+              label="Imágenes (puedes seleccionar varias a la vez)"
+              maxFiles={remainingSlots}
+              maxFileSizeBytes={maxPhotoSizeBytes}
+              onFilesChange={setSelectedFiles}
+              selectedFiles={selectedFiles}
+            />
             <div className="flex flex-wrap items-center gap-3">
               <Button disabled={uploadDisabled} type="submit">
                 <PlusIcon data-icon="inline-start" />
