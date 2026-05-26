@@ -7,6 +7,7 @@ import {
   ExternalLinkIcon,
   GlobeIcon,
   MapPinIcon,
+  VerifiedIcon,
 } from "lucide-react"
 
 import { CafeGallery } from "@/components/cafe-gallery"
@@ -174,8 +175,8 @@ export default async function CafePage({ params }: CafePageProps) {
                   <div className="rounded-lg border border-dashed bg-muted/30 p-4">
                     <p className="text-sm font-medium">¿Eres dueño?</p>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      Solicita acceso para actualizar la ficha y verificar la
-                      información del local.
+                      Verifica este negocio y obten acceso para actualizar la información y destacarlo
+                      como una cafetería verificada en coffee index!
                     </p>
                     <Button
                       className="mt-3"
@@ -184,7 +185,8 @@ export default async function CafePage({ params }: CafePageProps) {
                       variant="outline"
                       size="sm"
                     >
-                      Reclamar local
+                      Verificar{" "}
+                      <VerifiedIcon className="text-[#3295F6]" data-icon="inline-end" />
                     </Button>
                   </div>
                   <Separator />

@@ -34,7 +34,7 @@ export default async function ClaimPage({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ShieldCheckIcon />
-              Reclamar local
+              Verificar local
             </CardTitle>
           </CardHeader>
           <CardContent>
