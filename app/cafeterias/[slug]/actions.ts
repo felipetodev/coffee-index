@@ -134,7 +134,6 @@ export async function submitCafeReviewAction(
     if (files.length > 0) {
       await replaceReviewMedia({
         altTexts,
-        authorClerkUserId,
         cafeSlug: cafe.slug,
         files,
         reviewId: review.id,
@@ -230,13 +229,11 @@ async function deleteReviewMedia(reviewId: string) {
 
 async function replaceReviewMedia({
   altTexts,
-  authorClerkUserId,
   cafeSlug,
   files,
   reviewId,
 }: {
   altTexts: string[]
-  authorClerkUserId: string
   cafeSlug: string
   files: File[]
   reviewId: string
