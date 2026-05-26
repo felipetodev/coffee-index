@@ -12,6 +12,10 @@ import {
 
 import { CafeGallery } from "@/components/cafe-gallery"
 import { CafeMap } from "@/components/cafe-map"
+import {
+  CafeEngagement,
+  FavoriteButton,
+} from "@/app/cafeterias/[slug]/cafe-engagement"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -21,6 +25,7 @@ import {
   instagramUrl,
 } from "@/lib/cafes"
 import { getPublishedCafeBySlug, getPublishedCafes } from "@/lib/data/cafes"
+import { getViewerCafeState, getVisibleCafeReviews } from "@/lib/data/reviews"
 import {
   cafeImageUrl,
   cafePath,
@@ -94,6 +99,21 @@ export default async function CafePage({ params }: CafePageProps) {
   if (!cafe) {
     notFound()
   }
+  const [visibleReviews, viewerState] = cafe.id
+    ? await Promise.all([
+        getVisibleCafeReviews(cafe.id),
+        getViewerCafeState(cafe.id),
+      ])
+    : [
+        [],
+        {
+          isSignedIn: false,
+          isFavorite: false,
+          ownReview: null,
+          canSubmitReview: false,
+          nextReviewAt: null,
+        },
+      ]
   const website = cafe.socialLinks?.find((link) => link.platform === "website")
   const hoursText = cafe.hoursText?.trim()
   return (
@@ -130,10 +150,17 @@ export default async function CafePage({ params }: CafePageProps) {
                   </Badge>
                 ))}
               </div>
-              <div className="mt-4 flex flex-wrap items-center gap-3">
+              <div className="mt-4 flex flex-wrap items-baseline gap-3">
                 <h1 className="text-3xl font-medium tracking-tight sm:text-5xl">
                   {cafe.name}
                 </h1>
+                {cafe.id ? (
+                  <FavoriteButton
+                    cafeId={cafe.id}
+                    initialFavorite={viewerState.isFavorite}
+                    isSignedIn={viewerState.isSignedIn}
+                  />
+                ) : null}
                 {cafe.verificationStatus === "verified" && (
                   <Badge className="h-7" variant="secondary">
                     <BadgeCheckIcon data-icon="inline-start" />
@@ -151,6 +178,12 @@ export default async function CafePage({ params }: CafePageProps) {
               images={cafe.imagePlaceholders}
               itemClassName="min-h-[22rem]"
               showAllPhotosCta
+            />
+            <CafeEngagement
+              approvedReviews={visibleReviews}
+              cafeId={cafe.id}
+              cafeSlug={cafe.slug}
+              viewerState={viewerState}
             />
           </div>
 
