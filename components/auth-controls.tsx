@@ -1,4 +1,6 @@
 
+"use client"
+
 import {
   OrganizationSwitcher,
   SignInButton,
@@ -20,9 +22,6 @@ export function AuthControls() {
 
 function ClerkAuthControls() {
   const { isLoaded, isSignedIn } = useAuth()
-  const { userMemberships } = useOrganizationList({
-    userMemberships: true,
-  })
 
   if (!isLoaded) {
     return null
@@ -43,28 +42,34 @@ function ClerkAuthControls() {
     )
   }
 
+  return <ClerkOrganizationControls />
+}
+
+function ClerkOrganizationControls() {
+  const { userMemberships } = useOrganizationList({
+    userMemberships: true,
+  })
   const showOrganizationSwitcher =
     Boolean(userMemberships.data?.length) || userMemberships.isLoading
 
+  if (!showOrganizationSwitcher) {
+    return <UserButton />
+  }
+
   return (
-    <>
-      {showOrganizationSwitcher ? (
-        <div className="flex items-center gap-2 rounded-full border bg-background px-2 py-1 shadow-sm">
-          <OrganizationSwitcher
-            hidePersonal={false}
-            afterSelectOrganizationUrl="/dashboard"
-            appearance={{
-              elements: {
-                organizationSwitcherPopoverActionButton__createOrganization: {
-                  display: "none",
-                },
-              },
-            }}
-          />
-        </div>
-      ) : (
-        <UserButton />
-      )}
-    </>
+    <div className="flex items-center gap-2 rounded-full border bg-background px-2 py-1 shadow-sm">
+      <OrganizationSwitcher
+        hidePersonal={false}
+        afterSelectOrganizationUrl="/dashboard"
+        appearance={{
+          elements: {
+            organizationSwitcherPopoverActionButton__createOrganization: {
+              display: "none",
+            },
+          },
+        }}
+      />
+      <UserButton />
+    </div>
   )
 }

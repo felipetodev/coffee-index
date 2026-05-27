@@ -1,12 +1,13 @@
 import Link from "next/link"
 import { auth } from "@clerk/nextjs/server"
+import { ExternalLinkIcon } from "lucide-react"
 import { redirect } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
+import { isPlatformAdmin } from "@/lib/auth/platform-admin"
 
 const workspaceLinks = [
   ["Perfil", "perfil"],
-  ["Horarios", "horarios"],
   ["Fotos", "fotos"],
   ["Eventos", "eventos"],
   ["Equipo", "equipo"],
@@ -20,9 +21,10 @@ export default async function WorkspaceLayout({
   params: Promise<{ workspaceSlug: string }>
 }) {
   const { workspaceSlug } = await params
-  const { orgSlug } = await auth()
+  const { orgSlug, userId } = await auth()
+  const platformAdmin = await isPlatformAdmin(userId)
 
-  if (orgSlug && orgSlug !== workspaceSlug) {
+  if (!platformAdmin && orgSlug !== workspaceSlug) {
     redirect("/dashboard")
   }
 
@@ -32,9 +34,20 @@ export default async function WorkspaceLayout({
         <header className="flex flex-col gap-4 border-b pb-5 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-sm font-medium text-muted-foreground">Workspace</p>
-            <h1 className="mt-1 text-3xl font-medium tracking-tight">
-              {workspaceSlug}
-            </h1>
+            <div className="mt-1 flex items-baseline gap-2">
+              <h1 className="text-3xl font-medium tracking-tight">
+                {workspaceSlug}
+              </h1>
+              <Button
+                aria-label="Ver ficha pública"
+                nativeButton={false}
+                render={<Link href={`/cafeterias/${workspaceSlug}`} />}
+                size="icon-sm"
+                variant="ghost"
+              >
+                <ExternalLinkIcon className="size-3.5" />
+              </Button>
+            </div>
           </div>
           <nav className="flex gap-2 overflow-x-auto">
             {workspaceLinks.map(([label, segment]) => (

@@ -318,6 +318,98 @@ export async function rejectClaimAction(formData: FormData) {
   revalidatePath("/admin/claims")
 }
 
+export async function approveReviewAction(formData: FormData) {
+  const actorClerkUserId = await requirePlatformAdmin()
+  const reviewId = String(formData.get("reviewId") ?? "").trim()
+  const supabase = requireSupabaseAdmin()
+
+  if (!reviewId) {
+    throw new Error("No reviewId provided.")
+  }
+
+  const { data: review, error: reviewError } = await supabase
+    .from("cafe_reviews")
+    .select("id, cafe_id, cafes(slug)")
+    .eq("id", reviewId)
+    .maybeSingle()
+
+  if (reviewError || !review) {
+    throw new Error("Review no encontrada.")
+  }
+
+  const { error } = await supabase
+    .from("cafe_reviews")
+    .update({
+      status: "approved",
+      reviewed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", reviewId)
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  const cafe = Array.isArray(review.cafes) ? review.cafes[0] : review.cafes
+
+  await writeAuditLog(actorClerkUserId, "review.approved", "cafe_review", {
+    reviewId,
+    cafeId: review.cafe_id,
+  })
+
+  revalidatePath("/admin/reviews")
+
+  if (cafe?.slug) {
+    revalidatePath(`/cafeterias/${cafe.slug}`)
+  }
+}
+
+export async function rejectReviewAction(formData: FormData) {
+  const actorClerkUserId = await requirePlatformAdmin()
+  const reviewId = String(formData.get("reviewId") ?? "").trim()
+  const supabase = requireSupabaseAdmin()
+
+  if (!reviewId) {
+    throw new Error("No reviewId provided.")
+  }
+
+  const { data: review, error: reviewError } = await supabase
+    .from("cafe_reviews")
+    .select("id, cafe_id, cafes(slug)")
+    .eq("id", reviewId)
+    .maybeSingle()
+
+  if (reviewError || !review) {
+    throw new Error("Review no encontrada.")
+  }
+
+  const { error } = await supabase
+    .from("cafe_reviews")
+    .update({
+      status: "rejected",
+      reviewed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", reviewId)
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  const cafe = Array.isArray(review.cafes) ? review.cafes[0] : review.cafes
+
+  await writeAuditLog(actorClerkUserId, "review.rejected", "cafe_review", {
+    reviewId,
+    cafeId: review.cafe_id,
+  })
+
+  revalidatePath("/admin/reviews")
+
+  if (cafe?.slug) {
+    revalidatePath(`/cafeterias/${cafe.slug}`)
+  }
+}
+
 function requireSupabaseAdmin() {
   const supabase = createSupabaseAdminClient()
 

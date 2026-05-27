@@ -1,14 +1,13 @@
 "use client"
 
 import Link from "next/link"
-import { useMemo, useState, useSyncExternalStore } from "react"
+import { useMemo, useState } from "react"
 import {
   ArrowUpRightIcon,
   BadgeCheckIcon,
   CoffeeIcon,
   ExternalLinkIcon,
   GlobeIcon,
-  HeartIcon,
   MapPinIcon,
   SearchIcon,
 } from "lucide-react"
@@ -16,6 +15,7 @@ import {
 import { CafeGallery } from "@/components/cafe-gallery"
 import { CafeMap } from "@/components/cafe-map"
 import { AuthControls } from "@/components/auth-controls"
+import { FavoriteButton } from "@/components/favorite-button"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
@@ -46,64 +46,23 @@ import type { CafeViewModel } from "@/lib/types"
 type CafeCatalogProps = {
   cafes: CafeViewModel[]
   canAddLocal?: boolean
+  favoriteCafeIds?: string[]
+  isSignedIn?: boolean
 }
 
-const SAVED_CAFES_STORAGE_KEY = "cafeteria.saved-cafes"
-const SAVED_CAFES_CHANGE_EVENT = "cafeteria:saved-cafes-change"
-
-function subscribeToSavedCafes(onStoreChange: () => void) {
-  window.addEventListener("storage", onStoreChange)
-  window.addEventListener(SAVED_CAFES_CHANGE_EVENT, onStoreChange)
-
-  return () => {
-    window.removeEventListener("storage", onStoreChange)
-    window.removeEventListener(SAVED_CAFES_CHANGE_EVENT, onStoreChange)
-  }
-}
-
-function getSavedCafesSnapshot() {
-  return window.localStorage.getItem(SAVED_CAFES_STORAGE_KEY) ?? "[]"
-}
-
-function getSavedCafesServerSnapshot() {
-  return "[]"
-}
-
-function writeSavedCafeSlugs(slugs: string[]) {
-  window.localStorage.setItem(SAVED_CAFES_STORAGE_KEY, JSON.stringify(slugs))
-  window.dispatchEvent(new Event(SAVED_CAFES_CHANGE_EVENT))
-}
-
-export function CafeCatalog({ cafes, canAddLocal = true }: CafeCatalogProps) {
+export function CafeCatalog({
+  cafes,
+  canAddLocal = true,
+  favoriteCafeIds = [],
+  isSignedIn = false,
+}: CafeCatalogProps) {
   const [query, setQuery] = useState("")
   const [commune, setCommune] = useState("Todas")
   const [selectedFeature, setSelectedFeature] = useState("Todas")
-
-  const savedCafeSlugsSnapshot = useSyncExternalStore(
-    subscribeToSavedCafes,
-    getSavedCafesSnapshot,
-    getSavedCafesServerSnapshot
+  const favoriteCafeIdSet = useMemo(
+    () => new Set(favoriteCafeIds),
+    [favoriteCafeIds]
   )
-
-  const savedCafeSlugs = useMemo(() => {
-    try {
-      const parsedValue = JSON.parse(savedCafeSlugsSnapshot)
-
-      if (!Array.isArray(parsedValue)) {
-        return []
-      }
-
-      const knownSlugs = new Set(cafes.map((cafe) => cafe.slug))
-      const storedSlugs = parsedValue.filter(
-        (slug): slug is string =>
-          typeof slug === "string" && knownSlugs.has(slug)
-      )
-
-      return [...new Set(storedSlugs)]
-    } catch {
-      return []
-    }
-  }, [cafes, savedCafeSlugsSnapshot])
 
   const filteredCafes = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase()
@@ -131,12 +90,10 @@ export function CafeCatalog({ cafes, canAddLocal = true }: CafeCatalogProps) {
     })
   }, [cafes, commune, query, selectedFeature])
 
-  const savedCafes = useMemo(
+  const favoriteCafes = useMemo(
     () =>
-      savedCafeSlugs
-        .map((slug) => cafes.find((cafe) => cafe.slug === slug))
-        .filter((cafe): cafe is CafeViewModel => Boolean(cafe)),
-    [cafes, savedCafeSlugs]
+      cafes.filter((cafe) => cafe.id && favoriteCafeIdSet.has(cafe.id)),
+    [cafes, favoriteCafeIdSet]
   )
 
   const communes = useMemo(
@@ -158,14 +115,6 @@ export function CafeCatalog({ cafes, canAddLocal = true }: CafeCatalogProps) {
       ).sort((a, b) => a.label.localeCompare(b.label, "es")),
     [cafes]
   )
-
-  const toggleSavedCafe = (slug: string) => {
-    writeSavedCafeSlugs(
-      savedCafeSlugs.includes(slug)
-        ? savedCafeSlugs.filter((savedSlug) => savedSlug !== slug)
-        : [...savedCafeSlugs, slug]
-    )
-  }
 
   return (
     <div className="flex min-h-svh flex-col bg-background">
@@ -247,14 +196,9 @@ export function CafeCatalog({ cafes, canAddLocal = true }: CafeCatalogProps) {
       </header>
 
       <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
-        <div className="min-h-0" suppressHydrationWarning>
-          {savedCafes.length > 0 && (
-            <SavedCafesCarousel
-              cafes={savedCafes}
-              onToggleSaved={toggleSavedCafe}
-            />
-          )}
-        </div>
+        {favoriteCafes.length > 0 && (
+          <FavoriteCafesCarousel cafes={favoriteCafes} isSignedIn={isSignedIn} />
+        )}
 
         <section className="grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
           <div>
@@ -273,9 +217,9 @@ export function CafeCatalog({ cafes, canAddLocal = true }: CafeCatalogProps) {
             <CafeCard
               cafe={cafe}
               index={index}
-              isSaved={savedCafeSlugs.includes(cafe.slug)}
+              isFavorite={Boolean(cafe.id && favoriteCafeIdSet.has(cafe.id))}
+              isSignedIn={isSignedIn}
               key={cafe.slug}
-              onToggleSaved={toggleSavedCafe}
             />
           ))}
         </section>
@@ -284,12 +228,12 @@ export function CafeCatalog({ cafes, canAddLocal = true }: CafeCatalogProps) {
   )
 }
 
-function SavedCafesCarousel({
+function FavoriteCafesCarousel({
   cafes,
-  onToggleSaved,
+  isSignedIn,
 }: {
   cafes: CafeViewModel[]
-  onToggleSaved: (slug: string) => void
+  isSignedIn: boolean
 }) {
   return (
     <section className="flex flex-col gap-3">
@@ -314,18 +258,15 @@ function SavedCafesCarousel({
       />
       <div className="flex gap-2 overflow-x-auto pb-1">
         {cafes.map((cafe) => (
-          <Button
+          <FavoriteButton
             key={cafe.slug}
-            variant="outline"
-            size="sm"
-            onClick={() => onToggleSaved(cafe.slug)}
+            cafeId={cafe.id}
+            className="shadow-none"
+            initialFavorite
+            isSignedIn={isSignedIn}
           >
-            <HeartIcon
-              data-icon="inline-start"
-              className="fill-red-500 text-red-500"
-            />
             {cafe.name}
-          </Button>
+          </FavoriteButton>
         ))}
       </div>
     </section>
@@ -335,13 +276,13 @@ function SavedCafesCarousel({
 function CafeCard({
   cafe,
   index,
-  isSaved,
-  onToggleSaved,
+  isFavorite,
+  isSignedIn,
 }: {
   cafe: CafeViewModel
   index: number
-  isSaved: boolean
-  onToggleSaved: (slug: string) => void
+  isFavorite: boolean
+  isSignedIn: boolean
 }) {
   return (
     <Card className="h-full rounded-lg">
@@ -352,22 +293,14 @@ function CafeCard({
           itemClassName="min-h-52"
           loadImageEager={index < 3}
         />
-        <Button
-          className="absolute right-6 top-4 rounded-full bg-background/75 text-foreground shadow-sm ring-1 ring-border backdrop-blur hover:bg-background"
-          variant="ghost"
-          size="icon"
-          aria-label={
-            isSaved
-              ? `Quitar ${cafe.name} de guardadas`
-              : `Guardar ${cafe.name}`
-          }
-          aria-pressed={isSaved}
-          onClick={() => onToggleSaved(cafe.slug)}
-        >
-          <HeartIcon
-            className={isSaved ? "fill-red-500 text-red-500" : ""}
+        {cafe.id ? (
+          <FavoriteButton
+            cafeId={cafe.id}
+            className="absolute right-6 top-4"
+            initialFavorite={isFavorite}
+            isSignedIn={isSignedIn}
           />
-        </Button>
+        ) : null}
       </CardContent>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
