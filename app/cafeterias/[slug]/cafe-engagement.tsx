@@ -4,13 +4,11 @@ import { useActionState, useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { HeartIcon, SendIcon, StarIcon, TrashIcon } from "lucide-react"
+import { SendIcon, StarIcon, TrashIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import {
   submitCafeReviewAction,
-  toggleCafeFavoriteAction,
-  type FavoriteActionState,
   type ReviewActionState,
 } from "@/app/cafeterias/[slug]/actions"
 import {
@@ -33,7 +31,6 @@ import type {
 import { cn } from "@/lib/utils"
 
 const reviewInitialState: ReviewActionState = {}
-const favoriteInitialState: FavoriteActionState = {}
 const minReviewLength = 80
 const maxReviewPhotos = 3
 const maxPhotoSizeBytes = 1024 * 1024
@@ -59,7 +56,7 @@ export function CafeEngagement({
         <CardHeader>
           <CardTitle>Comunidad</CardTitle>
           <CardDescription>
-            Compartenos tu experiencia para ayudar a otros a conocer mejor este local.
+            Comparte tu experiencia para ayudar a otros a descubrir lo mejor de este local.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
@@ -261,62 +258,6 @@ export function CafeReviewForm({
   )
 }
 
-export function FavoriteButton({
-  cafeId,
-  initialFavorite,
-  isSignedIn,
-}: {
-  cafeId: string
-  initialFavorite: boolean
-  isSignedIn: boolean
-}) {
-  const [state, formAction, isPending] = useActionState(
-    toggleCafeFavoriteAction,
-    favoriteInitialState
-  )
-  const isFavorite = state.isFavorite ?? initialFavorite
-
-  useToastFromState(state)
-
-  if (!isSignedIn) {
-    return (
-      <Button
-        aria-label="Inicia sesión para guardar favoritos"
-        nativeButton={false}
-        render={<Link href="/sign-in" />}
-        size="icon"
-        title="Inicia sesión para guardar favoritos"
-        variant="ghost"
-      >
-        <HeartIcon className="size-5 text-muted-foreground" />
-      </Button>
-    )
-  }
-
-  return (
-    <form action={formAction}>
-      <input name="cafeId" type="hidden" value={cafeId} />
-      <Button
-        aria-label={isFavorite ? "Quitar de favoritos" : "Guardar en favoritos"}
-        disabled={isPending}
-        size="icon"
-        title="Favorito"
-        type="submit"
-        variant="ghost"
-      >
-        <HeartIcon
-          className={cn(
-            "size-5",
-            isFavorite
-              ? "fill-red-500 text-red-500"
-              : "text-muted-foreground"
-          )}
-        />
-      </Button>
-    </form>
-  )
-}
-
 function ApprovedReviews({ reviews }: { reviews: CafeReviewViewModel[] }) {
   return (
     <div className="grid gap-3" id="reviews">
@@ -399,7 +340,7 @@ function ApprovedReviews({ reviews }: { reviews: CafeReviewViewModel[] }) {
   )
 }
 
-function useToastFromState(state: ReviewActionState | FavoriteActionState) {
+function useToastFromState(state: ReviewActionState) {
   useEffect(() => {
     if (state.error) {
       toast.error(state.error)

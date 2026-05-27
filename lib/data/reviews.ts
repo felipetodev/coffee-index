@@ -158,6 +158,33 @@ export async function getVisibleCafeReviews(
   )
 }
 
+export async function getViewerFavoriteCafeIds(
+  userId: string | null
+): Promise<string[]> {
+  if (!userId) {
+    return []
+  }
+
+  const supabase = createSupabaseAdminClient()
+
+  if (!supabase) {
+    return []
+  }
+
+  const { data, error } = await supabase
+    .from("cafe_favorites")
+    .select("cafe_id")
+    .eq("clerk_user_id", userId)
+
+  if (error || !data) {
+    return []
+  }
+
+  return data
+    .map((favorite) => favorite.cafe_id)
+    .filter((cafeId): cafeId is string => typeof cafeId === "string")
+}
+
 export async function getViewerCafeState(
   cafeId: string
 ): Promise<ViewerCafeState> {

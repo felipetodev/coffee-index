@@ -182,6 +182,8 @@ export async function toggleCafeFavoriteAction(
         throw new Error(error.message)
       }
 
+      revalidatePath("/")
+
       return { success: "Local removido de favoritos.", isFavorite: false }
     }
 
@@ -193,6 +195,8 @@ export async function toggleCafeFavoriteAction(
     if (error) {
       throw new Error(error.message)
     }
+
+    revalidatePath("/")
 
     return { success: "Local guardado en favoritos.", isFavorite: true }
   } catch (error) {

@@ -12,10 +12,8 @@ import {
 
 import { CafeGallery } from "@/components/cafe-gallery"
 import { CafeMap } from "@/components/cafe-map"
-import {
-  CafeEngagement,
-  FavoriteButton,
-} from "@/app/cafeterias/[slug]/cafe-engagement"
+import { CafeEngagement } from "@/app/cafeterias/[slug]/cafe-engagement"
+import { FavoriteButton } from "@/components/favorite-button"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
