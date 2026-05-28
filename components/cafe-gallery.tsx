@@ -143,7 +143,7 @@ function AllCafePhotosDialog({
                     src={image.src}
                     alt={`${name}: ${image.label}`}
                     className={loadedImages[image.key] ? "h-auto w-full" : "hidden"}
-                    loading={i < 3 ? "eager" : "lazy"}
+                    loading="lazy"
                     onLoad={() =>
                       setLoadedImages((current) => ({
                         ...current,

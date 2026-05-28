@@ -176,6 +176,7 @@ export default async function CafePage({ params }: CafePageProps) {
               images={cafe.imagePlaceholders}
               itemClassName="min-h-[22rem]"
               showAllPhotosCta
+              loadImageEager
             />
             <CafeEngagement
               approvedReviews={visibleReviews}
