@@ -82,7 +82,7 @@ export function PhotoUploadFields({
             if (files.some((file) => file.size > maxFileSizeBytes)) {
               event.currentTarget.value = ""
               onFilesChange([])
-              toast.error("Cada imagen debe pesar 1 MB o menos.")
+              toast.error(`Cada imagen debe pesar ${maxFileSizeBytes / (1024 * 1024)} MB o menos.`)
               return
             }
 
@@ -125,8 +125,8 @@ export function PhotoUploadFields({
                   showAltFields
                     ? "grid gap-3 rounded-lg border bg-background p-2 sm:grid-cols-[96px_1fr] sm:items-center"
                     : previewSize === "compact"
-                      ? "relative aspect-[4/3] w-24 overflow-hidden rounded-lg bg-muted"
-                      : "relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-muted sm:w-32"
+                      ? "relative aspect-4/3 w-24 overflow-hidden rounded-lg bg-muted"
+                      : "relative aspect-4/3 w-full overflow-hidden rounded-lg bg-muted sm:w-32"
                 }
                 key={
                   file
@@ -135,7 +135,7 @@ export function PhotoUploadFields({
                 }
               >
                 {showAltFields ? (
-                  <div className="relative aspect-[4/3] overflow-hidden rounded-md bg-muted">
+                  <div className="relative aspect-4/3 overflow-hidden rounded-md bg-muted">
                     <PreviewImage
                       previewUrl={selectedFile?.previewUrl}
                       size="96px"

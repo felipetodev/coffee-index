@@ -81,7 +81,7 @@ type ProfileRow = {
   image_url: string | null
 }
 
-const reviewCooldownMs = 2 * 60 * 60 * 1000
+const reviewCooldownMs = 2 * 60 * 60 * 1000 // 2h
 
 export async function getApprovedCafeReviews(
   cafeId: string

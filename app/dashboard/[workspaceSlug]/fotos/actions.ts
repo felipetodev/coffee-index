@@ -48,7 +48,7 @@ type CafeMediaRecord = {
 }
 
 const maxPhotosPerWorkspace = 3
-const maxPhotoSizeBytes = 1024 * 1024
+const maxPhotoSizeBytes = 5 * 1024 * 1024 // 5 MB
 const allowedImageTypes = new Map([
   ["image/jpeg", "jpg"],
   ["image/png", "png"],
@@ -405,7 +405,7 @@ function validateImageFile(file: File) {
   }
 
   if (file.size > maxPhotoSizeBytes) {
-    throw new Error("Cada imagen debe pesar 1 MB o menos.")
+    throw new Error(`Cada imagen debe pesar ${maxPhotoSizeBytes / (1024 * 1024)} MB o menos.`)
   }
 }
 

@@ -33,7 +33,7 @@ import { cn } from "@/lib/utils"
 const reviewInitialState: ReviewActionState = {}
 const minReviewLength = 80
 const maxReviewPhotos = 3
-const maxPhotoSizeBytes = 1024 * 1024
+const maxPhotoSizeBytes = 5 * 1024 * 1024 // 5 MB
 
 export function CafeEngagement({
   approvedReviews,
@@ -100,8 +100,11 @@ export function CafeReviewForm({
   const [rating, setRating] = useState(viewerState.ownReview?.rating ?? 0)
   const [selectedFiles, setSelectedFiles] = useSelectedUploadFiles()
   const defaultBody = viewerState.ownReview?.body ?? ""
+  const [body, setBody] = useState<string>(defaultBody)
   const ownStatus = viewerState.ownReview?.status
   const disabled = isPending || !viewerState.canSubmitReview
+  const isReviewApproved = ownStatus === "approved"
+  const isBodyUnchanged = body === defaultBody
 
   useToastFromState(state)
 
@@ -118,7 +121,7 @@ export function CafeReviewForm({
         <CardHeader>
           <CardTitle>Cuéntanos tu experiencia en {cafeName}</CardTitle>
           <CardDescription>
-            Inicia sesión para escribir una reseña y adjuntar fotos.
+            Inicia sesión para escribir una reseña de tu experiencia
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -130,22 +133,23 @@ export function CafeReviewForm({
     )
   }
 
+  const lastUpdatedAt = viewerState.ownReview?.lastSubmittedAt
+
   return (
     <Card className="rounded-lg">
       <CardHeader>
         <CardTitle>Cuéntanos tu experiencia en {cafeName}</CardTitle>
         <CardDescription>
-          Algunas cosas que deberías considerar en tu review: comida, servicio
-          y ambiente.
+          Ayudanos a mejorar la experiencia dejando una reseña honesta de tu visita
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form action={formAction} className="grid gap-4">
           <input name="cafeId" type="hidden" value={cafeId} />
           <input name="rating" type="hidden" value={rating} />
-          {ownStatus && (
+          {ownStatus ? (
             <div className="flex flex-wrap items-center gap-2">
-              <Badge variant={ownStatus === "approved" ? "default" : "secondary"}>
+              <Badge variant={isReviewApproved ? "default" : "secondary"}>
                 {statusLabel(ownStatus)}
               </Badge>
               {viewerState.nextReviewAt && (
@@ -154,7 +158,12 @@ export function CafeReviewForm({
                 </span>
               )}
             </div>
-          )}
+          ) : null}
+          {lastUpdatedAt ? (
+            <span className="text-xs text-muted-foreground">
+              Actualizado {timeAgo(lastUpdatedAt)}
+            </span>
+          ) : null}
           <div className="grid gap-2">
             <p className="text-sm font-medium">Rating</p>
             <p className="text-sm text-muted-foreground">
@@ -164,8 +173,11 @@ export function CafeReviewForm({
               {[1, 2, 3, 4, 5].map((value) => (
                 <button
                   aria-label={`${value} estrellas`}
-                  className="rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
-                  disabled={disabled}
+                  className={cn(
+                    "rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50",
+                    { "cursor-not-allowed": isReviewApproved }
+                  )}
+                  disabled={disabled || isReviewApproved}
                   key={value}
                   onClick={() => setRating(value)}
                   type="button"
@@ -183,15 +195,16 @@ export function CafeReviewForm({
           <label className="grid gap-2 text-sm font-medium">
             Reseña
             <span className="text-xs font-normal leading-5 text-muted-foreground">
-              Algunas cosas que podrías considerar en tu review: comida,
-              servicio y ambiente.
+              Algunas cosas que podrías considerar en tu review (comida,
+              servicio y ambiente)
             </span>
             <textarea
               className="min-h-32 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
-              defaultValue={defaultBody}
               disabled={disabled}
               minLength={minReviewLength}
               name="body"
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
               placeholder={`Cuéntanos qué probaste, cómo fue el servicio y qué tipo de ambiente encontraste en ${cafeName}.`}
               required
             />
@@ -220,7 +233,7 @@ export function CafeReviewForm({
               <div className="grid gap-2 sm:grid-cols-3">
                 {viewerState.ownReview.media.map((media) => (
                   <div
-                    className="relative aspect-[4/3] overflow-hidden rounded-lg bg-muted"
+                    className="relative aspect-4/3 overflow-hidden rounded-lg bg-muted"
                     key={media.id}
                   >
                     <Image
@@ -246,7 +259,7 @@ export function CafeReviewForm({
           ) : null}
           <Button
             className="w-fit"
-            disabled={disabled || rating === 0}
+            disabled={disabled || rating === 0 || isBodyUnchanged}
             type="submit"
           >
             <SendIcon data-icon="inline-start" />
@@ -381,6 +394,29 @@ function formatDate(value: string) {
     dateStyle: "short",
     timeStyle: "short",
   }).format(new Date(value))
+}
+
+function timeAgo(value: string) {
+  const now = new Date()
+  const date = new Date(value)
+  const diffMs = now.getTime() - date.getTime()
+  const diffSecs = Math.floor(diffMs / 1000)
+  const diffMins = Math.floor(diffSecs / 60)
+  const diffHours = Math.floor(diffMins / 60)
+  const diffDays = Math.floor(diffHours / 24)
+  const diffWeeks = Math.floor(diffDays / 7)
+  const diffMonths = Math.floor(diffDays / 30)
+  const diffYears = Math.floor(diffDays / 365)
+
+  const rtf = new Intl.RelativeTimeFormat("es-CL", { numeric: "auto" })
+
+  if (diffSecs < 60) return rtf.format(-diffSecs, "second")
+  if (diffMins < 60) return rtf.format(-diffMins, "minute")
+  if (diffHours < 24) return rtf.format(-diffHours, "hour")
+  if (diffDays < 7) return rtf.format(-diffDays, "day")
+  if (diffWeeks < 4) return rtf.format(-diffWeeks, "week")
+  if (diffMonths < 12) return rtf.format(-diffMonths, "month")
+  return rtf.format(-diffYears, "year")
 }
 
 function formatReviewDate(value: string) {
