@@ -174,7 +174,7 @@ export default async function CafePage({ params }: CafePageProps) {
             <CafeGallery
               name={cafe.name}
               images={cafe.imagePlaceholders}
-              itemClassName="min-h-[22rem]"
+              itemClassName="min-h-[26rem]"
               showAllPhotosCta
               loadImageEager
             />
