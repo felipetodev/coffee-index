@@ -36,7 +36,7 @@ import { Input } from "@/components/ui/input"
 
 const initialState: PhotoActionState = {}
 const maxPhotos = 3
-const maxPhotoSizeBytes = 1024 * 1024
+const maxPhotoSizeBytes = 5 * 1024 * 1024 // 5 MB
 
 export function WorkspacePhotosManager({
   cafeName,
@@ -75,7 +75,7 @@ export function WorkspacePhotosManager({
         <CardHeader>
           <CardTitle>Subir fotos</CardTitle>
           <CardDescription>
-            JPG, PNG o WebP. Máximo 1 MB por imagen.
+            JPG, PNG o WebP. Máximo {maxPhotoSizeBytes / (1024 * 1024)} MB por imagen
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -157,7 +157,7 @@ function WorkspacePhotoCard({
 
   return (
     <Card className="rounded-lg pt-0">
-      <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+      <div className="relative aspect-4/3 overflow-hidden bg-muted">
         <Image
           alt={photo.alt || `Foto ${index + 1}`}
           className="h-full w-full object-cover"
