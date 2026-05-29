@@ -4,9 +4,11 @@ import { notFound } from "next/navigation"
 import {
   ArrowLeftIcon,
   BadgeCheckIcon,
+  CalendarClockIcon,
   ExternalLinkIcon,
   GlobeIcon,
   MapPinIcon,
+  SparklesIcon,
   VerifiedIcon,
 } from "lucide-react"
 
@@ -23,6 +25,7 @@ import {
   instagramUrl,
 } from "@/lib/cafes"
 import { getPublishedCafeBySlug, getPublishedCafes } from "@/lib/data/cafes"
+import { getActiveEventsForCafe } from "@/lib/data/events"
 import { getViewerCafeState, getVisibleCafeReviews } from "@/lib/data/reviews"
 import {
   cafeImageUrl,
@@ -30,6 +33,7 @@ import {
   createCafeStructuredData,
   siteConfig,
 } from "@/lib/seo"
+import { cn } from "@/lib/utils"
 
 type CafePageProps = {
   params: Promise<{
@@ -97,10 +101,11 @@ export default async function CafePage({ params }: CafePageProps) {
   if (!cafe) {
     notFound()
   }
-  const [visibleReviews, viewerState] = cafe.id
+  const [visibleReviews, viewerState, activeEvents] = cafe.id
     ? await Promise.all([
         getVisibleCafeReviews(cafe.id),
         getViewerCafeState(cafe.id),
+        getActiveEventsForCafe(cafe.id, cafe.workspaceId),
       ])
     : [
         [],
@@ -111,9 +116,14 @@ export default async function CafePage({ params }: CafePageProps) {
           canSubmitReview: false,
           nextReviewAt: null,
         },
+        [],
       ]
   const website = cafe.socialLinks?.find((link) => link.platform === "website")
   const hoursText = cafe.hoursText?.trim()
+  const highlightedEvent = activeEvents[0]
+  const highlightedEventIsHappening = highlightedEvent
+    ? isEventHappeningNow(highlightedEvent.startsAt, highlightedEvent.endsAt)
+    : false
   return (
     <main className="min-h-svh bg-background">
       <script
@@ -133,6 +143,47 @@ export default async function CafePage({ params }: CafePageProps) {
           <ArrowLeftIcon data-icon="inline-start" />
           Volver al catálogo
         </Button>
+
+        {highlightedEvent ? (
+          <Link
+            className={cn(
+              "group flex flex-col gap-3 rounded-lg border p-4 shadow-sm transition-colors sm:flex-row sm:items-center sm:justify-between",
+              highlightedEventIsHappening
+                ? "border-emerald-300/80 bg-emerald-100/80 text-emerald-950 hover:bg-emerald-100 dark:border-emerald-400/30 dark:bg-emerald-400/10 dark:text-emerald-100 dark:hover:bg-emerald-400/15"
+                : "border-amber-300/70 bg-amber-100/75 text-amber-950 hover:bg-amber-100 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-100 dark:hover:bg-amber-400/15"
+            )}
+            href={`/eventos/${highlightedEvent.slug}`}
+          >
+            <div className="flex min-w-0 gap-3">
+              <div
+                className={cn(
+                  "grid size-9 shrink-0 place-items-center rounded-lg text-white shadow-sm",
+                  highlightedEventIsHappening ? "bg-emerald-500" : "bg-amber-500"
+                )}
+              >
+                <SparklesIcon className="size-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-medium">
+                  {highlightedEventIsHappening
+                    ? `Ocurriendo ahora en ${cafe.name}`
+                    : `Evento activo en ${cafe.name}`}
+                </p>
+                <p className="mt-1 truncate text-sm">
+                  {highlightedEvent.title}
+                  {highlightedEvent.subtitle ? ` • ${highlightedEvent.subtitle}` : ""}
+                </p>
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-2 text-sm font-medium">
+              <CalendarClockIcon className="size-4" />
+              {highlightedEventIsHappening
+                ? `Termina ${formatEventDate(highlightedEvent.endsAt)}`
+                : formatEventDate(highlightedEvent.startsAt)}
+              <ExternalLinkIcon className="size-4 transition-transform group-hover:translate-x-0.5" />
+            </div>
+          </Link>
+        ) : null}
 
         <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start">
           <div className="flex min-w-0 flex-col gap-6">
@@ -301,7 +352,7 @@ export default async function CafePage({ params }: CafePageProps) {
                   className="mt-4 h-48"
                   name={cafe.name}
                 />
-                <div className="mt-3 flex flex-col gap-2">
+              <div className="mt-3 flex flex-col gap-2">
                   {cafe.addresses.map((address) => (
                     <Button
                       key={address}
@@ -337,4 +388,19 @@ export default async function CafePage({ params }: CafePageProps) {
       </div>
     </main>
   )
+}
+
+function formatEventDate(value: string) {
+  return new Intl.DateTimeFormat("es-CL", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value))
+}
+
+function isEventHappeningNow(startsAt: string, endsAt: string) {
+  const now = Date.now()
+
+  return new Date(startsAt).getTime() <= now && now <= new Date(endsAt).getTime()
 }
