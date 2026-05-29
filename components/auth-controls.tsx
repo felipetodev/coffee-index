@@ -10,6 +10,7 @@ import {
 } from "@clerk/nextjs"
 import { CircleUserRoundIcon } from "lucide-react"
 
+import { EventNotificationsBell } from "@/components/event-notifications-bell"
 import { Button } from "@/components/ui/button"
 
 export function AuthControls() {
@@ -53,7 +54,12 @@ function ClerkOrganizationControls() {
     Boolean(userMemberships.data?.length) || userMemberships.isLoading
 
   if (!showOrganizationSwitcher) {
-    return <UserButton />
+    return (
+      <div className="flex items-center gap-2">
+        <EventNotificationsBell />
+        <UserButton />
+      </div>
+    )
   }
 
   return (
@@ -69,6 +75,7 @@ function ClerkOrganizationControls() {
           },
         }}
       />
+      <EventNotificationsBell />
       <UserButton />
     </div>
   )
