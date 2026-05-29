@@ -3,6 +3,7 @@ import "server-only"
 import { auth } from "@clerk/nextjs/server"
 
 import { isPlatformAdmin } from "@/lib/auth/platform-admin"
+import { logSupabaseError } from "@/lib/supabase/errors"
 import {
   createPublicSupabaseClient,
   createSupabaseAdminClient,
@@ -203,6 +204,10 @@ export async function getWorkspaceEventsData(
     .maybeSingle()
 
   if (workspaceError || !workspaceData) {
+    logSupabaseError("getWorkspaceEventsData (workspace)", workspaceError, {
+      workspaceSlug,
+    })
+
     return null
   }
 
@@ -226,6 +231,10 @@ export async function getWorkspaceEventsData(
     .order("sort_order", { referencedTable: "event_media", ascending: true })
 
   if (error || !data) {
+    logSupabaseError("getWorkspaceEventsData (events)", error, {
+      workspaceId: workspace.id,
+    })
+
     return null
   }
 
@@ -259,6 +268,8 @@ export async function getPublishedEventBySlug(
     .maybeSingle()
 
   if (error || !data) {
+    logSupabaseError("getPublishedEventBySlug", error, { eventSlug })
+
     return null
   }
 
@@ -297,6 +308,8 @@ export async function getActiveEventsForCafe(
   const { data, error } = await query
 
   if (error || !data) {
+    logSupabaseError("getActiveEventsForCafe", error, { cafeId, workspaceId })
+
     return []
   }
 
@@ -319,6 +332,8 @@ export async function getAdminEvents(): Promise<EventViewModel[]> {
     .limit(12)
 
   if (error || !data) {
+    logSupabaseError("getAdminEvents", error)
+
     return []
   }
 
@@ -359,6 +374,8 @@ export async function getFavoriteFeedEvents(): Promise<EventViewModel[]> {
     .limit(60)
 
   if (error || !data) {
+    logSupabaseError("getFavoriteFeedEvents", error, { userId })
+
     return []
   }
 
@@ -384,6 +401,8 @@ export async function getExploreEvents(): Promise<EventViewModel[]> {
     .limit(80)
 
   if (error || !data) {
+    logSupabaseError("getExploreEvents", error, { userId })
+
     return []
   }
 
@@ -401,11 +420,17 @@ export async function getActiveEventNotifications(
     return []
   }
 
-  await supabase
+  const { error: deleteError } = await supabase
     .from("event_notifications")
     .delete()
     .eq("recipient_clerk_user_id", userId)
     .lte("expires_at", new Date().toISOString())
+
+  if (deleteError) {
+    logSupabaseError("getActiveEventNotifications (cleanup)", deleteError, {
+      userId,
+    })
+  }
 
   const { data, error } = await supabase
     .from("event_notifications")
@@ -418,6 +443,8 @@ export async function getActiveEventNotifications(
     .limit(10)
 
   if (error || !data) {
+    logSupabaseError("getActiveEventNotifications", error, { userId })
+
     return []
   }
 
@@ -516,6 +543,8 @@ async function getEventComments(eventId: string) {
     .order("created_at", { ascending: true })
 
   if (error || !data) {
+    logSupabaseError("getEventComments", error, { eventId })
+
     return []
   }
 
@@ -550,6 +579,8 @@ async function getProfilesByUserId(userIds: string[]) {
     .in("clerk_user_id", uniqueUserIds)
 
   if (error || !data) {
+    logSupabaseError("getProfilesByUserId", error, { userIds: uniqueUserIds })
+
     return new Map<string, ProfileRow>()
   }
 

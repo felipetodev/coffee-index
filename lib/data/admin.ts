@@ -1,5 +1,6 @@
 import "server-only"
 
+import { logSupabaseError } from "@/lib/supabase/errors"
 import { createSupabaseAdminClient } from "@/lib/supabase/server"
 import type {
   CafeSubmissionViewModel,
@@ -22,6 +23,7 @@ export async function getAdminSubmissions(): Promise<CafeSubmissionViewModel[]> 
     .order("created_at", { ascending: false })
 
   if (error || !data) {
+    logSupabaseError("getAdminSubmissions", error)
     handleAdminDataError("Could not load cafe submissions", error)
   }
 
@@ -52,6 +54,7 @@ export async function getAdminClaimRequests(): Promise<ClaimRequestViewModel[]> 
     .order("created_at", { ascending: false })
 
   if (error || !data) {
+    logSupabaseError("getAdminClaimRequests", error)
     handleAdminDataError("Could not load claim requests", error)
   }
 
@@ -84,6 +87,7 @@ export async function getUserWorkspaces(
     .order("created_at", { ascending: false })
 
   if (error || !data) {
+    logSupabaseError("getUserWorkspaces", error, { clerkUserId })
     handleAdminDataError("Could not load user workspaces", error)
   }
 

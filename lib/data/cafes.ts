@@ -1,5 +1,6 @@
 import "server-only"
 
+import { logSupabaseError } from "@/lib/supabase/errors"
 import { createPublicSupabaseClient } from "@/lib/supabase/server"
 import type {
   CafeFeatureViewModel,
@@ -101,6 +102,7 @@ export async function getPublishedCafes(): Promise<CafeViewModel[]> {
     .order("name")
 
   if (error || !data) {
+    logSupabaseError("getPublishedCafes", error, { status: "published" })
     return []
   }
 
@@ -143,6 +145,7 @@ export async function getPublishedCafeBySlug(
     .maybeSingle()
 
   if (error || !data) {
+    logSupabaseError("getPublishedCafeBySlug", error, { slug, status: "published" })
     return null
   }
 

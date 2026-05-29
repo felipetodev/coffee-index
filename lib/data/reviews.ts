@@ -3,6 +3,7 @@ import "server-only"
 import { auth } from "@clerk/nextjs/server"
 
 import { isPlatformAdmin } from "@/lib/auth/platform-admin"
+import { logSupabaseError } from "@/lib/supabase/errors"
 import { createPublicSupabaseClient, createSupabaseAdminClient } from "@/lib/supabase/server"
 
 export type ReviewStatus = "pending" | "approved" | "rejected"
@@ -102,6 +103,8 @@ export async function getApprovedCafeReviews(
     .order("created_at", { ascending: false })
 
   if (error || !data) {
+    logSupabaseError("getApprovedCafeReviews", error, { cafeId })
+
     return []
   }
 
@@ -141,6 +144,8 @@ export async function getVisibleCafeReviews(
   const { data, error } = await query
 
   if (error || !data) {
+    logSupabaseError("getVisibleCafeReviews", error, { cafeId, userId })
+
     return []
   }
 
@@ -177,6 +182,8 @@ export async function getViewerFavoriteCafeIds(
     .eq("clerk_user_id", userId)
 
   if (error || !data) {
+    logSupabaseError("getViewerFavoriteCafeIds", error, { userId })
+
     return []
   }
 
@@ -264,6 +271,8 @@ export async function getPendingAdminReviews(): Promise<AdminCafeReviewViewModel
     .order("created_at", { ascending: false })
 
   if (error || !data) {
+    logSupabaseError("getPendingAdminReviews", error)
+
     return []
   }
 

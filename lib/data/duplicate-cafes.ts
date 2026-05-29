@@ -1,5 +1,6 @@
 import "server-only"
 
+import { logSupabaseError } from "@/lib/supabase/errors"
 import { normalizeSocialHandle } from "@/lib/social-links"
 import { createSupabaseAdminClient } from "@/lib/supabase/server"
 
@@ -27,7 +28,7 @@ export async function checkCafeDuplicateByInstagram(
   }
 
   const [
-    { data: socialLink },
+    { data: socialLink, error: socialLinkError },
     { data: submission },
   ] = await Promise.all([
     supabase
@@ -38,6 +39,12 @@ export async function checkCafeDuplicateByInstagram(
       .maybeSingle(),
     getActiveSubmission(instagramHandle, options.excludeSubmissionId),
   ])
+
+  if (socialLinkError) {
+    logSupabaseError("checkCafeDuplicateByInstagram (socialLink)", socialLinkError, {
+      instagramHandle,
+    })
+  }
 
   return {
     instagramHandle,
@@ -75,5 +82,14 @@ async function getActiveSubmission(
     query = query.neq("id", excludeSubmissionId)
   }
 
-  return query.maybeSingle()
+  const result = await query.maybeSingle()
+
+  if (result.error) {
+    logSupabaseError("getActiveSubmission", result.error, {
+      instagramHandle,
+      excludeSubmissionId,
+    })
+  }
+
+  return result
 }

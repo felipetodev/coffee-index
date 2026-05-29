@@ -1,3 +1,23 @@
+// TODO: Replace console.error with an observability platform
+export function logSupabaseError(
+  context: string,
+  error: { message: string; code?: string } | null,
+  metadata?: Record<string, unknown>
+) {
+  if (process.env.NODE_ENV === "development") {
+    console.error(
+      `[Supabase] ${context} failed:`,
+      error?.message ?? "Unknown error",
+      metadata ?? ""
+    )
+  } else {
+    console.error(`[Supabase] ${context} failed:`, {
+      code: error?.code,
+      metadata,
+    })
+  }
+}
+
 export function formatSupabaseSetupError(error: { message: string; code?: string }) {
   if (process.env.NODE_ENV !== "development") {
     return "No pudimos completar la acción. Inténtalo nuevamente o contáctanos si el problema persiste."
