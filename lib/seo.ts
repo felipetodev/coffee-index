@@ -1,4 +1,4 @@
-import { instagramUrl } from "@/lib/cafes"
+import { instagramUrl } from "@/lib/social-links"
 import type { CafeViewModel } from "@/lib/types"
 
 export const siteConfig = {

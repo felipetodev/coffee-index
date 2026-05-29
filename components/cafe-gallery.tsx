@@ -21,7 +21,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Skeleton } from "@/components/ui/skeleton"
-import type { CafeImage } from "@/lib/cafes"
+import type { CafeImage } from "@/lib/types"
 
 type CafeGalleryProps = {
   name: string

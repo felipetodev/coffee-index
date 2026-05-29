@@ -1,13 +1,9 @@
 import "server-only"
 
-import {
-  cafeFeatureLabels,
-  cafes as staticCafes,
-  type CafeImage,
-} from "@/lib/cafes"
 import { createPublicSupabaseClient } from "@/lib/supabase/server"
 import type {
   CafeFeatureViewModel,
+  CafeImage,
   CafeSocialLinkViewModel,
   CafeViewModel,
   VerificationStatus,
@@ -72,24 +68,11 @@ type CafeRow = {
   cafe_social_links: CafeSocialLinkRow[] | null
 }
 
-export function getStaticCafeViewModels(): CafeViewModel[] {
-  return staticCafes.map((cafe) => ({
-    ...cafe,
-    features: cafe.features.map((feature) => ({
-      slug: feature,
-      label: cafeFeatureLabels[feature],
-    })),
-    status: "published",
-    verificationStatus: "unverified",
-    workspaceStatus: "seeded",
-  }))
-}
-
 export async function getPublishedCafes(): Promise<CafeViewModel[]> {
   const supabase = createPublicSupabaseClient()
 
   if (!supabase) {
-    return getStaticCafeViewModels()
+    return []
   }
 
   const { data, error } = await supabase
@@ -118,7 +101,7 @@ export async function getPublishedCafes(): Promise<CafeViewModel[]> {
     .order("name")
 
   if (error || !data) {
-    return getStaticCafeViewModels()
+    return []
   }
 
   return (data as unknown as CafeRow[]).map(mapCafeRow)
@@ -130,7 +113,7 @@ export async function getPublishedCafeBySlug(
   const supabase = createPublicSupabaseClient()
 
   if (!supabase) {
-    return getStaticCafeViewModels().find((cafe) => cafe.slug === slug) ?? null
+    return null
   }
 
   const { data, error } = await supabase
@@ -160,7 +143,7 @@ export async function getPublishedCafeBySlug(
     .maybeSingle()
 
   if (error || !data) {
-    return getStaticCafeViewModels().find((cafe) => cafe.slug === slug) ?? null
+    return null
   }
 
   return mapCafeRow(data as unknown as CafeRow)

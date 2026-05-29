@@ -9,8 +9,7 @@
     "start": "next start",
     "lint": "eslint",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
-    "seed:media": "tsx scripts/upload-static-cafe-media.ts",
-    "seed:submissions": "tsx scripts/seed-static-cafe-submissions.ts",
+
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

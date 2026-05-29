@@ -37,10 +37,8 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
-import {
-  googleMapsUrl,
-  instagramUrl,
-} from "@/lib/cafes"
+import { instagramUrl } from "@/lib/social-links"
+import { googleMapsUrl } from "@/lib/utils"
 import type { CafeViewModel } from "@/lib/types"
 
 type CafeCatalogProps = {

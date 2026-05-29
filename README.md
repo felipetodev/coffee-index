@@ -28,6 +28,4 @@ This app is prepared for Clerk + Supabase.
 2. Enable Clerk Organizations with membership optional.
 3. Run the SQL migration in `supabase/migrations/0001_workspaces_cafes.sql`.
 4. Add at least one row to `platform_admins` for your Clerk user id.
-5. Seed the current static cafés with `scripts/seed-static-cafes.ts` using a TS runner.
-
-Without Supabase configured, the public catalog falls back to `lib/cafes.ts`.
+5. Seed the initial cafés using the Supabase seed scripts or SQL inserts.

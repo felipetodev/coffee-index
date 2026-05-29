@@ -10,8 +10,6 @@ Use the existing UI conventions: App Router, Server Components by default, shadc
 ## Current Architecture
 
 - Public catalog routes read from Supabase through `lib/data/cafes.ts`.
-- If Supabase env vars are missing, public cafe data falls back to `lib/cafes.ts`.
-- `lib/cafes.ts` is now seed/fallback data, not the long-term source of truth.
 - The public cafe contract is `CafeViewModel` in `lib/types.ts`.
 - Clerk is used for auth, sessions, organizations, invitations, and workspace roles.
 - Supabase is used for Postgres, Storage, RLS, submissions, claims, events, audit logs, and admin data.
@@ -25,7 +23,7 @@ Use the existing UI conventions: App Router, Server Components by default, shadc
 - `components/auth-provider.tsx`: wraps Clerk only when public Clerk env exists.
 - `components/auth-controls.tsx`: sign-in/user/org UI.
 - `proxy.ts`: Clerk route protection and public webhook exemption.
-- `lib/data/cafes.ts`: public cafe data access with static fallback.
+- `lib/data/cafes.ts`: public cafe data access from Supabase.
 - `lib/data/admin.ts`: admin/workspace data reads.
 - `lib/supabase/server.ts`: public, token, and admin Supabase clients.
 - `lib/auth/platform-admin.ts`: platform admin checks.
@@ -37,7 +35,6 @@ Use the existing UI conventions: App Router, Server Components by default, shadc
 - `app/admin/*`: initial platform admin screens.
 - `app/dashboard/*`: initial workspace shell.
 - `supabase/migrations/0001_workspaces_cafes.sql`: schema, enums, indexes, RLS, storage buckets.
-- `scripts/seed-static-cafes.ts`: seeds static cafes as unverified workspaces.
 - `.env.example`: required environment variables.
 
 ## Environment
@@ -116,7 +113,7 @@ Implemented:
 
 - Clerk provider and auth routes.
 - Supabase clients and env helpers.
-- Public data access with static fallback.
+- Public data access from Supabase.
 - Verified badge support.
 - “Añade tu local” authenticated submission flow.
 - Claim request flow.
@@ -166,5 +163,5 @@ http://localhost:3000
 - Keep `CafeViewModel` stable so UI components do not depend on raw Supabase rows.
 - When adding Supabase tables, add indexes for common filters/joins and partial indexes for status-heavy queries.
 - When adding client UI, avoid importing server-only helpers.
-- Keep public pages usable without backend env vars by preserving the static fallback where practical.
+- Public pages require Supabase env vars to display cafe data; there is no static fallback.
 - **Supabase migrations must use sequential numbering.** The CLI default (`supabase migration new`) generates a timestamped filename (e.g. `20260529030220_name.sql`). Before committing, rename it to the next sequential number (e.g. `0011_name.sql`) to match the existing convention in `supabase/migrations/`.

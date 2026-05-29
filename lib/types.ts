@@ -1,4 +1,8 @@
-import type { CafeImage } from "@/lib/cafes"
+export type CafeImage = {
+  label: string
+  href?: string
+  src?: string
+}
 
 export type WorkspaceStatus = "seeded" | "active" | "suspended" | "archived"
 

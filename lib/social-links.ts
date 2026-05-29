@@ -51,6 +51,10 @@ export function socialUrl(platform: "instagram" | "tiktok" | "x", value: string)
   return `https://x.com/${handle}`
 }
 
+export function instagramUrl(handle: string) {
+  return `https://instagram.com/${handle.replace("@", "")}`
+}
+
 export function createSocialLinkRows(cafeId: string, payload: CafeSubmissionPayload) {
   return [
     payload.website

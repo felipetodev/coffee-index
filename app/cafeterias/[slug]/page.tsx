@@ -20,11 +20,9 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import {
-  googleMapsUrl,
-  instagramUrl,
-} from "@/lib/cafes"
 import { getPublishedCafeBySlug, getPublishedCafes } from "@/lib/data/cafes"
+import { instagramUrl } from "@/lib/social-links"
+import { googleMapsUrl } from "@/lib/utils"
 import { getActiveEventsForCafe } from "@/lib/data/events"
 import { getViewerCafeState, getVisibleCafeReviews } from "@/lib/data/reviews"
 import {
