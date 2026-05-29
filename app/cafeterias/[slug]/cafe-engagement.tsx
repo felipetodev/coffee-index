@@ -40,19 +40,21 @@ export function CafeEngagement({
   cafeId,
   cafeSlug,
   viewerState,
+  isMobile
 }: {
   approvedReviews: CafeReviewViewModel[]
   cafeId?: string
   cafeSlug: string
   viewerState: ViewerCafeState
+  isMobile?: boolean
 }) {
   if (!cafeId) {
     return null
   }
 
   return (
-    <section className="grid gap-4">
-      <Card className="rounded-lg">
+    <section className={cn("gap-4", isMobile ? "md:hidden" : "hidden md:grid")}>
+      <Card className="rounded-lg mb-4 md:mb-auto">
         <CardHeader>
           <CardTitle>Comunidad</CardTitle>
           <CardDescription>
@@ -313,7 +315,7 @@ function ApprovedReviews({ reviews }: { reviews: CafeReviewViewModel[] }) {
                     ) : null}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {formatReviewDate(review.createdAt)}
+                    {timeAgo(review.createdAt)}
                   </p>
                 </div>
               </div>
@@ -417,14 +419,4 @@ function timeAgo(value: string) {
   if (diffWeeks < 4) return rtf.format(-diffWeeks, "week")
   if (diffMonths < 12) return rtf.format(-diffMonths, "month")
   return rtf.format(-diffYears, "year")
-}
-
-function formatReviewDate(value: string) {
-  const formatted = new Intl.DateTimeFormat("es-CL", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(value))
-
-  return formatted.replace(".", "")
 }

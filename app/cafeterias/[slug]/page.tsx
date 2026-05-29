@@ -325,6 +325,14 @@ export default async function CafePage({ params }: CafePageProps) {
               </div>
             </CardContent>
           </Card>
+          {/* refact this later for better mobile layout */}
+          <CafeEngagement
+            approvedReviews={visibleReviews}
+            cafeId={cafe.id}
+            cafeSlug={cafe.slug}
+            viewerState={viewerState}
+            isMobile
+          />
         </section>
       </div>
     </main>
