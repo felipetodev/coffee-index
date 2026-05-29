@@ -254,7 +254,7 @@ function FavoriteCafesCarousel({
           src: cafe.imagePlaceholders[0]?.src,
         }))}
         itemClassName="min-h-44"
-        name="Cafeterías guardadas"
+        name="Favoritos"
       />
       <div className="flex gap-2 overflow-x-auto pb-1">
         {cafes.map((cafe) => (
