@@ -2,7 +2,8 @@
 
 ## Project Context
 
-This is a Next.js 16 app for The Coffee Index, a specialty coffee catalog in Chile. The app is being migrated from static data in `lib/cafes.ts` toward a Clerk + Supabase backend with cafe workspaces, owner claims, submissions, admin review, and verified cafe badges.
+The Coffee Index is a directory of coffee shops in Chile.
+Next.js + Clerk + Supabase backend with cafe workspaces, owner claims, submissions, admin review, verified cafe badges and more.
 
 Use the existing UI conventions: App Router, Server Components by default, shadcn-style components in `components/ui`, Tailwind v4, lucide icons, and compact operational UI rather than marketing-heavy pages.
 
@@ -166,3 +167,4 @@ http://localhost:3000
 - When adding Supabase tables, add indexes for common filters/joins and partial indexes for status-heavy queries.
 - When adding client UI, avoid importing server-only helpers.
 - Keep public pages usable without backend env vars by preserving the static fallback where practical.
+- **Supabase migrations must use sequential numbering.** The CLI default (`supabase migration new`) generates a timestamped filename (e.g. `20260529030220_name.sql`). Before committing, rename it to the next sequential number (e.g. `0011_name.sql`) to match the existing convention in `supabase/migrations/`.
