@@ -148,7 +148,7 @@ export function CafeCatalog({
               </h1>
               <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
                 Cafeterías, barras y tostadores para guardar, visitar y volver
-                a encontrar.
+                a encontrar
               </p>
             </div>
             <div className="w-fit rounded-lg border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
@@ -207,7 +207,7 @@ export function CafeCatalog({
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Usa los filtros para encontrar cafés tranquilos, con brunch,
-              aptos para laptop o buenos para juntarse.
+              aptos para trabajar o simplemente pasar un buen rato
             </p>
           </div>
         </section>
@@ -241,7 +241,7 @@ function FavoriteCafesCarousel({
         <div>
           <h2 className="text-xl font-medium tracking-tight">Favoritos</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Tus cafeterías favoritas quedan aquí para revisarlas rápido.
+            ¿Ya volviste a visitar tus cafeterías favoritas? Comparte tu experiencia con la comunidad.
           </p>
         </div>
         <Badge variant="secondary">{cafes.length}</Badge>
@@ -254,7 +254,7 @@ function FavoriteCafesCarousel({
           src: cafe.imagePlaceholders[0]?.src,
         }))}
         itemClassName="min-h-44"
-        name="Cafeterías guardadas"
+        name="Favoritos"
       />
       <div className="flex gap-2 overflow-x-auto pb-1">
         {cafes.map((cafe) => (

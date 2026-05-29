@@ -1,10 +1,28 @@
-import { WorkspaceSection } from "@/app/dashboard/[workspaceSlug]/workspace-section"
+import { notFound } from "next/navigation"
 
-export default function WorkspaceEventsPage() {
+import { WorkspaceEventsManager } from "@/app/dashboard/[workspaceSlug]/eventos/workspace-events-manager"
+import { getWorkspaceEventsData } from "@/lib/data/events"
+
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
+export default async function WorkspaceEventsPage({
+  params,
+}: {
+  params: Promise<{ workspaceSlug: string }>
+}) {
+  const { workspaceSlug } = await params
+  const data = await getWorkspaceEventsData(workspaceSlug)
+
+  if (!data) {
+    notFound()
+  }
+
   return (
-    <WorkspaceSection
-      title="Eventos"
-      description="Crea eventos del local; colaboradores pueden dejarlos pendientes de aprobación."
+    <WorkspaceEventsManager
+      cafeName={data.cafe.name}
+      events={data.events}
+      workspaceSlug={data.workspace.slug}
     />
   )
 }

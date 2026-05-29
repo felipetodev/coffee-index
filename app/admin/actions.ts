@@ -12,6 +12,7 @@ import {
   assertNoCafeDuplicate,
   checkCafeDuplicateByInstagram,
 } from "@/lib/data/duplicate-cafes"
+import { eventMediaBucket } from "@/lib/data/events"
 import { sendTransactionalEmail } from "@/lib/email"
 import { slugify } from "@/lib/slug"
 import { createSocialLinkRows } from "@/lib/social-links"
@@ -161,6 +162,62 @@ export async function rejectSubmissionAction(formData: FormData) {
   })
 
   revalidatePath("/admin/submissions")
+}
+
+export async function deleteAdminEventAction(formData: FormData) {
+  const actorClerkUserId = await requirePlatformAdmin()
+  const eventId = String(formData.get("eventId") ?? "").trim()
+  const supabase = requireSupabaseAdmin()
+
+  if (!eventId) {
+    throw new Error("No eventId provided.")
+  }
+
+  const { data: event, error: eventError } = await supabase
+    .from("events")
+    .select("id, slug, title, event_media(storage_path)")
+    .eq("id", eventId)
+    .maybeSingle()
+
+  if (eventError) {
+    throw new Error(`Failed to load event: ${eventError.message}`)
+  }
+
+  if (!event) {
+    throw new Error("Evento no encontrado.")
+  }
+
+  const paths = (event.event_media ?? [])
+    .map((item) => item.storage_path)
+    .filter((path): path is string => typeof path === "string" && Boolean(path))
+
+  const { error } = await supabase.from("events").delete().eq("id", eventId)
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  if (paths.length > 0) {
+    const { error: storageError } = await supabase
+      .storage
+      .from(eventMediaBucket)
+      .remove(paths)
+
+    if (storageError) {
+      console.error("Failed to remove event media:", storageError.message)
+    }
+  }
+
+  await writeAuditLog(actorClerkUserId, "event.deleted", "event", {
+    eventId,
+    slug: event.slug,
+    title: event.title,
+  })
+
+  revalidatePath("/admin/eventos")
+  revalidatePath("/feed")
+  revalidatePath("/feed/explorar")
+  revalidatePath(`/eventos/${event.slug}`)
 }
 
 export async function deleteSubmissionWorkspaceAction(formData: FormData) {

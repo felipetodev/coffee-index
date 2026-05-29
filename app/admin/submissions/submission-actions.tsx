@@ -4,6 +4,7 @@ import { useState } from "react"
 import type { ComponentProps } from "react"
 
 import { Button } from "@/components/ui/button"
+import { Trash2Icon } from "lucide-react"
 
 type SubmissionActionsProps = {
   submissionId: string
@@ -65,6 +66,7 @@ export function SubmissionActions({
           <input name="submissionId" type="hidden" value={submissionId} />
           <input name="workspaceId" type="hidden" value={workspaceId} />
           <Button disabled={isPending} size="sm" type="submit" variant="destructive">
+            <Trash2Icon data-icon="inline-start" />
             {pendingAction === "delete" ? "Eliminando..." : "Eliminar workspace"}
           </Button>
         </form>
