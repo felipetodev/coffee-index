@@ -32,6 +32,7 @@ Use the existing UI conventions: App Router, Server Components by default, shadc
 - `lib/supabase/errors.ts`: Supabase error logging with TODO for observability platform.
 - `lib/auth/platform-admin.ts`: platform admin checks.
 - `app/api/webhooks/clerk/route.ts`: verified Clerk webhook handler.
+- `app/api/notifications/telegram/route.ts`: internal Telegram alert endpoint for server-side error notifications.
 - `app/anade-tu-local/page.tsx`: authenticated submission form.
 - `app/anade-tu-local/actions.ts`: creates `cafe_submissions`.
 - `app/claim/[workspaceId]/page.tsx`: claim request form.
@@ -55,6 +56,9 @@ Required for full backend behavior:
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `RESEND_API_KEY`
 - `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`
+- `TELEGRAM_ALERT_SECRET`
+- `TELEGRAM_BOT_TOKEN`
+- `TELEGRAM_ERROR_CHAT_ID`
 
 Clerk Organizations must be enabled in membership optional mode.
 
@@ -134,6 +138,7 @@ Use the right Supabase client for the request shape:
 - Profile lookups for review/comment authors currently use admin server-side reads because `profiles` only allows users to read their own profile. Do not make `profiles` public unless replacing it with a deliberately minimal public profile view/table.
 - Admin/workspace reads and all moderation, approval, deletion, audit, claim, and workspace mutation flows must stay server-side with service role plus Clerk-derived authorization checks.
 - Never use service role in Client Components, route payloads, browser code, or public env vars. `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` is safe for public reads only because RLS and minimal grants remain the authority.
+- Telegram alerts are server-side only. The `/api/notifications/telegram` endpoint must be protected by `TELEGRAM_ALERT_SECRET`, and alert payloads must avoid service-role keys, auth tokens, cookies, emails, phone numbers, or raw request bodies.
 
 TODO security/performance follow-ups:
 

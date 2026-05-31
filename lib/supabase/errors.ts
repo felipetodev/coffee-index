@@ -1,3 +1,10 @@
+type SanitizedMetadataValue =
+  | string
+  | number
+  | boolean
+  | null
+  | SanitizedMetadataValue[]
+
 // TODO: Replace console.error with an observability platform
 export function logSupabaseError(
   context: string,
@@ -19,7 +26,74 @@ export function logSupabaseError(
       code: error.code,
       metadata,
     })
+    void notifyTelegramSupabaseError(context, error, metadata)
   }
+}
+
+async function notifyTelegramSupabaseError(
+  context: string,
+  error: { message: string; code?: string },
+  metadata?: Record<string, unknown>
+) {
+  const alertSecret = process.env.TELEGRAM_ALERT_SECRET
+
+  if (!alertSecret) {
+    return
+  }
+
+  await fetch("/api/notifications/telegram", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-telegram-alert-secret": alertSecret,
+    },
+    body: JSON.stringify({
+      source: "Supabase",
+      context,
+      code: error.code,
+      message: error.message,
+      metadata: sanitizeMetadata(metadata),
+    }),
+  }).catch((notificationError) => {
+    console.error("[Supabase] Telegram notification failed:", notificationError)
+  })
+}
+
+function sanitizeMetadata(metadata?: Record<string, unknown>) {
+  if (!metadata) {
+    return undefined
+  }
+
+  return Object.fromEntries(
+    Object.entries(metadata).map(([key, value]) => [
+      key,
+      isSensitiveMetadataKey(key) ? "[redacted]" : sanitizeMetadataValue(value),
+    ])
+  )
+}
+
+function sanitizeMetadataValue(value: unknown): SanitizedMetadataValue {
+  if (typeof value === "string") {
+    return value.length > 300 ? `${value.slice(0, 300)}...` : value
+  }
+
+  if (typeof value === "number" || typeof value === "boolean" || value === null) {
+    return value
+  }
+
+  if (Array.isArray(value)) {
+    return value.slice(0, 10).map(sanitizeMetadataValue)
+  }
+
+  if (typeof value === "object") {
+    return "[object]"
+  }
+
+  return String(value)
+}
+
+function isSensitiveMetadataKey(key: string) {
+  return /(token|secret|password|authorization|cookie|key|email|phone)/i.test(key)
 }
 
 export function formatSupabaseSetupError(error: { message: string; code?: string }) {
