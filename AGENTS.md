@@ -25,7 +25,11 @@ Use the existing UI conventions: App Router, Server Components by default, shadc
 - `proxy.ts`: Clerk route protection and public webhook exemption.
 - `lib/data/cafes.ts`: public cafe data access from Supabase.
 - `lib/data/admin.ts`: admin/workspace data reads.
-- `lib/supabase/server.ts`: public, token, and admin Supabase clients.
+- `lib/data/duplicate-cafes.ts`: duplicate checks for cafe submissions.
+- `lib/data/events.ts`: event data access with public and authenticated patterns.
+- `lib/data/reviews.ts`: review and favorite data access with public and authenticated patterns.
+- `lib/supabase/server.ts`: public, token, authenticated, and admin Supabase clients.
+- `lib/supabase/errors.ts`: Supabase error logging with TODO for observability platform.
 - `lib/auth/platform-admin.ts`: platform admin checks.
 - `app/api/webhooks/clerk/route.ts`: verified Clerk webhook handler.
 - `app/anade-tu-local/page.tsx`: authenticated submission form.
@@ -35,6 +39,8 @@ Use the existing UI conventions: App Router, Server Components by default, shadc
 - `app/admin/*`: initial platform admin screens.
 - `app/dashboard/*`: initial workspace shell.
 - `supabase/migrations/0001_workspaces_cafes.sql`: schema, enums, indexes, RLS, storage buckets.
+- `supabase/migrations/0011_workspace_events_feed.sql`: event feed, media, tags, comments, notifications, and related RLS.
+- `supabase/migrations/0012_security_hardening.sql`: minimal anon/authenticated grants and fixed `current_clerk_user_id()` search path.
 - `.env.example`: required environment variables.
 
 ## Environment
@@ -72,6 +78,13 @@ Supabase tables include:
 - `cafe_submissions`
 - `claim_requests`
 - `events`
+- `event_media`
+- `event_tags`
+- `event_comments`
+- `event_notifications`
+- `cafe_reviews`
+- `cafe_review_media`
+- `cafe_favorites`
 - `audit_logs`
 
 Public reads should only expose published cafes/events and approved media. Workspace/admin mutations should stay server-side and use auth-derived identity, not client-supplied ownership.
@@ -106,6 +119,26 @@ Platform admins are separate from cafe organization roles and are checked throug
 - Webhook routes must stay public in `proxy.ts` but must verify signatures with `verifyWebhook(req)`.
 - Clerk webhooks are eventually consistent; do not rely on them for synchronous onboarding completion.
 - RLS is enabled in the migration. Any new table in an exposed schema must also get RLS and explicit policies.
+- Treat Supabase security as two layers: `GRANT` controls whether a role can attempt an operation, and RLS controls which rows are visible/mutable. Keep both minimal.
+- Keep `anon` and `authenticated` table grants aligned with `supabase/migrations/0012_security_hardening.sql`; do not grant broad `update`, `delete`, or `truncate` privileges just to fix an access issue.
+- `public.current_clerk_user_id()` must keep a fixed empty `search_path` to satisfy Supabase security advisors.
+
+## Supabase Request Security Model
+
+Use the right Supabase client for the request shape:
+
+- Public catalog/feed/detail reads should use `createPublicSupabaseClient()` only when the matching RLS policy intentionally allows `anon` access. Examples: published cafes, published events, approved media, visible event comments, approved reviews.
+- Authenticated user-owned reads/writes should use server-side Clerk identity. Until Clerk Third-Party Auth is fully configured in both Clerk and Supabase, prefer `createSupabaseAdminClient()` plus explicit `clerk_user_id`/`workspace_id` filters in server-only code.
+- `createAuthenticatedSupabaseClient()` is only safe after Clerk Third-Party Auth is configured. It returns `null` when no Clerk token exists and should not silently fall back to anon behavior.
+- Duplicate checks for submissions must use `createSupabaseAdminClient()` in `lib/data/duplicate-cafes.ts` because they must see active submissions across users without exposing `cafe_submissions` publicly.
+- Profile lookups for review/comment authors currently use admin server-side reads because `profiles` only allows users to read their own profile. Do not make `profiles` public unless replacing it with a deliberately minimal public profile view/table.
+- Admin/workspace reads and all moderation, approval, deletion, audit, claim, and workspace mutation flows must stay server-side with service role plus Clerk-derived authorization checks.
+- Never use service role in Client Components, route payloads, browser code, or public env vars. `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` is safe for public reads only because RLS and minimal grants remain the authority.
+
+TODO security/performance follow-ups:
+
+- Replace admin-side public author profile lookups with a deliberately minimal public profile view/table, or denormalized author display fields on reviews/comments.
+- Add a catalog index for published cafe sorting, such as `cafes(name) where status = 'published'` or `(status, name)`, if the public catalog grows.
 
 ## Current Feature State
 
@@ -129,6 +162,7 @@ Still intentionally thin:
 - Advanced workspace/admin filtering.
 - Real image upload flow to Supabase Storage from submissions.
 - Clerk role/permission provisioning automation.
+- Clerk Third-Party Auth integration with Supabase (currently `createAuthenticatedSupabaseClient()` is unusable until configured in both Clerk and Supabase dashboards).
 
 ## Verification Commands
 

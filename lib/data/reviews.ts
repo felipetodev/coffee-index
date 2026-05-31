@@ -4,7 +4,10 @@ import { auth } from "@clerk/nextjs/server"
 
 import { isPlatformAdmin } from "@/lib/auth/platform-admin"
 import { logSupabaseError } from "@/lib/supabase/errors"
-import { createPublicSupabaseClient, createSupabaseAdminClient } from "@/lib/supabase/server"
+import {
+  createPublicSupabaseClient,
+  createSupabaseAdminClient,
+} from "@/lib/supabase/server"
 
 export type ReviewStatus = "pending" | "approved" | "rejected"
 
@@ -87,7 +90,7 @@ const reviewCooldownMs = 2 * 60 * 60 * 1000 // 2h
 export async function getApprovedCafeReviews(
   cafeId: string
 ): Promise<CafeReviewViewModel[]> {
-  const supabase = createSupabaseAdminClient() ?? createPublicSupabaseClient()
+  const supabase = createPublicSupabaseClient()
 
   if (!supabase) {
     return []
@@ -300,10 +303,14 @@ async function getProfilesByUserId(userIds: string[]) {
     return new Map<string, ProfileRow>()
   }
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("profiles")
     .select("clerk_user_id, name, image_url")
     .in("clerk_user_id", uniqueUserIds)
+
+  if (error) {
+    logSupabaseError("getProfilesByUserId", error, { userIds: uniqueUserIds })
+  }
 
   return new Map(
     ((data ?? []) as ProfileRow[]).map((profile) => [

@@ -1,5 +1,3 @@
--- This migration corresponds to 0011_workspace_events_feed.sql in the sequential naming convention.
-
 alter table public.events
 add column if not exists slug text,
 add column if not exists subtitle text,

@@ -120,6 +120,7 @@ type EventRow = {
 
 type CafeRelation = {
   id: string
+  workspace_id?: string | null
   slug: string
   name: string
 }
@@ -254,7 +255,7 @@ export async function getWorkspaceEventsData(
 export async function getPublishedEventBySlug(
   eventSlug: string
 ): Promise<EventViewModel | null> {
-  const supabase = createSupabaseAdminClient() ?? createPublicSupabaseClient()
+  const supabase = createPublicSupabaseClient()
 
   if (!supabase) {
     return null
@@ -287,17 +288,18 @@ export async function getActiveEventsForCafe(
     return []
   }
 
-  const supabase = createSupabaseAdminClient() ?? createPublicSupabaseClient()
+  const supabase = createPublicSupabaseClient()
 
   if (!supabase) {
     return []
   }
 
+  const now = new Date().toISOString()
   let query = supabase
     .from("events")
     .select(eventSelect)
     .eq("status", "published")
-    .gt("ends_at", new Date().toISOString())
+    .or(`ends_at.gt.${now},and(ends_at.is.null,starts_at.gte.${now})`)
     .order("starts_at", { ascending: true })
     .limit(3)
 
@@ -353,16 +355,23 @@ export async function getFavoriteFeedEvents(): Promise<EventViewModel[]> {
     return []
   }
 
-  const { data: favorites } = await supabase
+  const { data: favorites, error: favoritesError } = await supabase
     .from("cafe_favorites")
     .select("cafe_id")
     .eq("clerk_user_id", userId)
 
-  const cafeIds = (favorites ?? [])
-    .map((favorite) => favorite.cafe_id)
-    .filter((cafeId): cafeId is string => typeof cafeId === "string")
+  if (favoritesError) {
+    logSupabaseError("getFavoriteFeedEvents (favorites)", favoritesError, { userId })
+    return []
+  }
 
-  if (cafeIds.length === 0) {
+  const workspaceIds = await getWorkspaceIdsForCafeIds(
+    (favorites ?? [])
+      .map((favorite) => favorite.cafe_id)
+      .filter((cafeId): cafeId is string => typeof cafeId === "string")
+  )
+
+  if (workspaceIds.length === 0) {
     return []
   }
 
@@ -370,6 +379,7 @@ export async function getFavoriteFeedEvents(): Promise<EventViewModel[]> {
     .from("events")
     .select(eventSelect)
     .eq("status", "published")
+    .in("workspace_id", workspaceIds)
     .order("starts_at", { ascending: false })
     .limit(60)
 
@@ -379,26 +389,30 @@ export async function getFavoriteFeedEvents(): Promise<EventViewModel[]> {
     return []
   }
 
-  return (data as unknown as EventRow[])
-    .map(mapEventRow)
-    .filter((event) => cafeIds.includes(event.cafeId))
+  return (data as unknown as EventRow[]).map(mapEventRow)
 }
 
 export async function getExploreEvents(): Promise<EventViewModel[]> {
   const { userId } = await auth()
-  const supabase = createSupabaseAdminClient() ?? createPublicSupabaseClient()
+  const supabase = createPublicSupabaseClient()
 
   if (!supabase) {
     return []
   }
 
-  const favoriteIds = userId ? await getFavoriteCafeIds(userId) : []
-  const { data, error } = await supabase
+  const favoriteWorkspaceIds = userId ? await getFavoriteWorkspaceIds(userId) : []
+  let query = supabase
     .from("events")
     .select(eventSelect)
     .eq("status", "published")
     .order("starts_at", { ascending: false })
     .limit(80)
+
+  if (favoriteWorkspaceIds.length > 0) {
+    query = query.not("workspace_id", "in", `(${favoriteWorkspaceIds.join(",")})`)
+  }
+
+  const { data, error } = await query
 
   if (error || !data) {
     logSupabaseError("getExploreEvents", error, { userId })
@@ -406,9 +420,7 @@ export async function getExploreEvents(): Promise<EventViewModel[]> {
     return []
   }
 
-  return (data as unknown as EventRow[])
-    .map(mapEventRow)
-    .filter((event) => !favoriteIds.includes(event.cafeId))
+  return (data as unknown as EventRow[]).map(mapEventRow)
 }
 
 export async function getActiveEventNotifications(
@@ -518,18 +530,56 @@ async function getFavoriteCafeIds(userId: string) {
     return []
   }
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("cafe_favorites")
     .select("cafe_id")
     .eq("clerk_user_id", userId)
+
+  if (error) {
+    logSupabaseError("getFavoriteCafeIds", error, { userId })
+    return []
+  }
 
   return (data ?? [])
     .map((favorite) => favorite.cafe_id)
     .filter((cafeId): cafeId is string => typeof cafeId === "string")
 }
 
+async function getFavoriteWorkspaceIds(userId: string) {
+  const cafeIds = await getFavoriteCafeIds(userId)
+
+  return getWorkspaceIdsForCafeIds(cafeIds)
+}
+
+async function getWorkspaceIdsForCafeIds(cafeIds: string[]) {
+  const uniqueCafeIds = [...new Set(cafeIds)].filter(Boolean)
+  const supabase = createSupabaseAdminClient()
+
+  if (!supabase || uniqueCafeIds.length === 0) {
+    return []
+  }
+
+  const { data, error } = await supabase
+    .from("cafes")
+    .select("workspace_id")
+    .in("id", uniqueCafeIds)
+
+  if (error) {
+    logSupabaseError("getWorkspaceIdsForCafeIds", error, { cafeIds: uniqueCafeIds })
+    return []
+  }
+
+  return [
+    ...new Set(
+      (data ?? [])
+        .map((cafe) => cafe.workspace_id)
+        .filter((workspaceId): workspaceId is string => typeof workspaceId === "string")
+    ),
+  ]
+}
+
 async function getEventComments(eventId: string) {
-  const supabase = createSupabaseAdminClient() ?? createPublicSupabaseClient()
+  const supabase = createPublicSupabaseClient()
 
   if (!supabase) {
     return []

@@ -4,15 +4,19 @@ export function logSupabaseError(
   error: { message: string; code?: string } | null,
   metadata?: Record<string, unknown>
 ) {
+  if (!error) {
+    return
+  }
+
   if (process.env.NODE_ENV === "development") {
     console.error(
       `[Supabase] ${context} failed:`,
-      error?.message ?? "Unknown error",
+      error.message,
       metadata ?? ""
     )
   } else {
     console.error(`[Supabase] ${context} failed:`, {
-      code: error?.code,
+      code: error.code,
       metadata,
     })
   }
